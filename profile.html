@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quilox - My Profile</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@1,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-green: #1eb852;
+            --primary-dark: #159b42;
+            --text-dark: #1a1a1a;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --bg-main: #f8f9fb;
+            --bg-white: #ffffff;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            padding-bottom: 90px; /* Space for bottom nav */
+        }
+
+        /* --- Top Header Curve --- */
+        .header-section {
+            background: var(--primary-green);
+            position: relative;
+            padding: 50px 20px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-bottom-left-radius: 50% 20px;
+            border-bottom-right-radius: 50% 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(30, 184, 82, 0.2);
+        }
+
+        .blue-accent {
+            position: absolute;
+            bottom: -40px;
+            right: -40px;
+            width: 150px;
+            height: 150px;
+            background-color: #2563eb;
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .profile-avatar {
+            background: var(--bg-white);
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            color: var(--primary-green);
+        }
+
+        .profile-avatar svg {
+            width: 45px;
+            height: 45px;
+        }
+
+        .header-section h2 {
+            color: white;
+            font-size: 20px;
+            font-weight: 800;
+            z-index: 2;
+            margin-bottom: 5px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .status-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* --- User Card (Referral Code) --- */
+        .user-card-section {
+            padding: 0 20px;
+            margin-top: -20px;
+            z-index: 3;
+            position: relative;
+        }
+
+        .user-card {
+            background: var(--bg-white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-info p {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .code-info h3 {
+            font-size: 22px;
+            font-family: 'DM Mono', monospace;
+            color: var(--primary-green);
+            letter-spacing: 1px;
+        }
+
+        .copy-code-btn {
+            background: #ecfdf5;
+            color: var(--primary-green);
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: 0.2s;
+        }
+
+        .copy-code-btn:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .copy-code-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* --- Action Buttons --- */
+        .action-section {
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: var(--bg-white);
+            padding: 18px 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            color: var(--text-dark);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-green);
+        }
+
+        .btn-icon {
+            background: #ecfdf5;
+            color: var(--primary-green);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .btn-text {
+            flex: 1;
+        }
+
+        .btn-text h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .btn-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .btn-arrow {
+            color: var(--text-muted);
+        }
+
+        /* --- Logout Button (Red) --- */
+        .logout-btn {
+            background: #fef2f2;
+            padding: 18px 20px;
+            border-radius: 12px;
+            border: 1px solid #fecaca;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #ef4444;
+            font-weight: 700;
+            font-size: 15px;
+            margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #fee2e2;
+        }
+
+        .logout-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* --- Bottom Navigation --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bg-white);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 15px 0;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.05);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .nav-item.active { color: var(--primary-green); }
+        .nav-item svg { width: 22px; height: 22px; margin-bottom: 4px; }
+
+        /* --- SweetAlert Customization --- */
+        .swal2-container.swal2-top-left { top: 15px !important; left: 15px !important; max-width: 320px !important; z-index: 99999 !important; }
+        .swal-custom { padding: 10px 14px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; border-left: 4px solid var(--primary-green) !important; display: flex !important; align-items: center !important; }
+        .swal-custom.swal2-icon-error { border-left-color: #ef4444 !important; }
+        .swal-custom .swal2-title { font-size: 13px !important; font-weight: 700 !important; margin: 0 !important; padding: 0 !important; }
+        .swal-custom .swal2-html-container { font-size: 12px !important; margin: 0 !important; padding: 0 !important; color: var(--text-muted) !important; }
+        .swal-custom .swal2-icon { margin: 0 10px 0 0 !important; width: 24px !important; height: 24px !important; display: flex !important; }
+        .swal-custom .swal2-timer-progress-bar { background: var(--primary-green) !important; }
+        
+        .loader { display: flex; justify-content: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="header-section">
+        <div class="blue-accent"></div>
+        <div class="profile-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+        </div>
+        <h2 id="userPhone">Loading...</h2>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Active Account
+        </div>
+    </header>
+
+    <!-- User Info Card (Referral Code) -->
+    <section class="user-card-section">
+        <div class="user-card">
+            <div class="code-info">
+                <p>Your Referral Code</p>
+                <h3 id="userRefCode">---</h3>
+            </div>
+            <button class="copy-code-btn" onclick="copyCode()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                Copy
+            </button>
+        </div>
+    </section>
+
+    <!-- Actions Section -->
+    <section class="action-section">
+        
+        <!-- Change Password -->
+        <button class="action-btn" onclick="openChangePassword()">
+            <div class="btn-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
+            <div class="btn-text">
+                <h4>Change Password</h4>
+                <p>Update your account password</p>
+            </div>
+            <div class="btn-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
+        </button>
+
+        <!-- Contact Support -->
+        <a href="https://t.me/yourtelegramlink" target="_blank" class="action-btn">
+            <div class="btn-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            </div>
+            <div class="btn-text">
+                <h4>Contact Support</h4>
+                <p>Chat with us on Telegram</p>
+            </div>
+            <div class="btn-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
+        </a>
+
+        <!-- Logout -->
+        <button class="logout-btn" onclick="logout()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            Logout
+        </button>
+
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            Home
+        </a>
+        <a href="referral.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            Referral
+        </a>
+        <a href="profile.html" class="nav-item active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            Profile
+        </a>
+    </nav>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+            authDomain: "quilox-59463.firebaseapp.com",
+            projectId: "quilox-59463",
+            storageBucket: "quilox-59463.firebasestorage.app",
+            messagingSenderId: "602079101577",
+            appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-left',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
+            customClass: { popup: 'swal-custom' }
+        });
+
+        let currentRefCode = "";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    document.getElementById('userPhone').innerText = data.phone;
+                    document.getElementById('userRefCode').innerText = data.referralCode;
+                    currentRefCode = data.referralCode;
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Copy Referral Code
+        window.copyCode = function() {
+            if (!currentRefCode) return;
+            navigator.clipboard.writeText(currentRefCode);
+            Toast.fire({ icon: 'success', title: 'Code copied!' });
+        };
+
+        // Change Password Modal
+        window.openChangePassword = function() {
+            Swal.fire({
+                title: 'Change Password',
+                html: `
+                    <input type="password" id="newPassword" class="swal2-input" placeholder="New Password" style="font-size: 14px;">
+                    <input type="password" id="confirmNewPassword" class="swal2-input" placeholder="Confirm New Password" style="font-size: 14px;">
+                `,
+                showCancelButton: true,
+                confirmButtonColor: '#1eb852',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Update',
+                preConfirm: () => {
+                    const newPass = document.getElementById('newPassword').value;
+                    const confirmPass = document.getElementById('confirmNewPassword').value;
+                    
+                    if (!newPass || !confirmPass) {
+                        Swal.showValidationMessage('Please fill in both fields');
+                        return false;
+                    }
+                    if (newPass.length < 6) {
+                        Swal.showValidationMessage('Password must be at least 6 characters');
+                        return false;
+                    }
+                    if (newPass !== confirmPass) {
+                        Swal.showValidationMessage('Passwords do not match');
+                        return false;
+                    }
+                    return newPass;
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await updatePassword(auth.currentUser, result.value);
+                        Toast.fire({ icon: 'success', title: 'Password updated successfully!' });
+                    } catch (error) {
+                        console.error(error);
+                        let msg = "Failed to update password. Try logging in again.";
+                        if (error.code === 'auth/requires-recent-login') {
+                            msg = "Please log out and log back in to change your password.";
+                        }
+                        Toast.fire({ icon: 'error', title: msg });
+                    }
+                }
+            });
+        };
+
+        // Logout
+        window.logout = function() {
+            Swal.fire({
+                title: 'Log Out?',
+                text: "Are you sure you want to log out?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Logout'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    signOut(auth).then(() => {
+                        window.location.href = 'login.html';
+                    });
+                }
+            });
+        };
+    </script>
+</body>
+</html>
