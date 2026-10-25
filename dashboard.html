@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quilox - Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@1,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{--g:#1eb852;--gd:#159b42;--tx:#1a1a1a;--mu:#6b7280;--bd:#e5e7eb;--bg:#f8f9fb;--w:#fff;--sh:0 4px 15px rgba(0,0,0,.05);--red:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif;border-radius:0}
+body{background:var(--bg);color:var(--tx);padding-bottom:90px}
+
+/* Header */
+.top-header{background:var(--g);padding:20px;color:#fff;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 10px rgba(30,184,82,.2)}
+.user-info h2{font-size:16px;font-weight:700;margin-bottom:2px}
+.user-info p{font-size:13px;opacity:.9;font-family:'DM Mono',monospace;background:rgba(255,255,255,.2);padding:2px 6px;display:inline-block}
+.logout-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer}
+
+/* Wallets */
+.action-container{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.wallet-card{background:var(--w);padding:15px;box-shadow:var(--sh);border-top:4px solid #2563eb;min-width:0}
+.wallet-card.ngn{border-top-color:var(--g)}
+.wallet-title{font-size:11px;color:var(--mu);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.wallet-balance-row{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px}
+.wallet-label{font-size:11px;color:var(--mu)}
+.wallet-balance{font-size:13px;font-weight:800;font-family:'DM Mono',monospace;overflow-wrap:anywhere;text-align:right}
+.wallet-actions{display:flex;gap:8px;margin-top:15px}
+.btn-deposit,.btn-withdraw{flex:1;padding:9px 4px;border:none;font-size:11px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:block}
+.btn-deposit{background:var(--g);color:#fff}
+.btn-withdraw{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+
+/* Tabs */
+.tabs-container{padding:0 20px}
+.tabs-header{display:flex;background:var(--w);padding:5px;box-shadow:var(--sh);margin-bottom:20px}
+.tab-btn{flex:1;padding:10px 5px;font-size:12px;font-weight:700;color:var(--mu);background:transparent;border:none;cursor:pointer;transition:.3s}
+.tab-btn.active{background:var(--g);color:#fff;box-shadow:0 2px 8px rgba(30,184,82,.3)}
+.tab-content{display:none;animation:fi .3s ease}.tab-content.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* Plans */
+.plans-grid{display:grid;gap:15px}
+.plan-card{background:var(--w);padding:20px;box-shadow:var(--sh);border:1px solid var(--bd)}
+.plan-name{font-size:18px;font-weight:800;margin-bottom:5px}
+.plan-details{display:flex;justify-content:space-between;gap:6px;margin-bottom:15px;background:var(--bg);padding:10px}
+.plan-detail-item{text-align:center}
+.plan-detail-label{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase}
+.plan-detail-value{font-size:14px;font-weight:800;color:var(--g);font-family:'DM Mono',monospace}
+.btn-buy{width:100%;padding:12px;background:var(--g);color:#fff;border:none;font-weight:700;font-size:14px;cursor:pointer;transition:.2s}
+.btn-buy:hover{background:var(--gd)}
+
+/* Investments */
+.investment-card{background:var(--w);padding:15px;box-shadow:var(--sh);margin-bottom:15px;border-left:4px solid var(--g)}
+.inv-header{display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px dashed var(--bd);padding-bottom:10px}
+.inv-title{font-weight:800;font-size:15px}
+.inv-status{font-size:11px;font-weight:700;background:#ecfdf5;color:var(--g);padding:2px 8px}
+.inv-details{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px}
+.inv-detail span{display:block;color:var(--mu);font-size:10px;text-transform:uppercase;font-weight:700}
+.inv-detail strong{font-family:'DM Mono',monospace;font-size:13px}
+.loader{display:flex;justify-content:center;padding:30px;color:var(--mu);font-size:14px}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:var(--w);display:flex;justify-content:space-around;padding:10px 0 15px;box-shadow:0 -2px 15px rgba(0,0,0,.05);border-top:1px solid var(--bd);z-index:1000}
+.nav-item{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:var(--mu);font-size:11px;font-weight:700}
+.nav-item.active{color:var(--g)}
+.nav-item svg{width:22px;height:22px;margin-bottom:4px}
+
+/* SweetAlert: standard popups, square and phone-sized */
+.swal2-container{z-index:99999!important}
+.swal2-popup{border-radius:0!important;max-width:calc(100vw - 32px)!important;font-family:'Manrope',sans-serif!important}
+.swal2-popup:not(.swal-custom){width:320px!important;padding:20px 16px 16px!important}
+.swal2-popup:not(.swal-custom) .swal2-title{font-size:19px;font-weight:800}
+.swal2-popup:not(.swal-custom) .swal2-html-container{font-size:14px;line-height:1.7;margin:8px 0 0}
+.swal2-styled{border-radius:0!important;font-size:14px!important;font-weight:700!important}
+.swal2-close{box-shadow:none!important}
+/* Small toast, top-left */
+.swal2-container.swal2-top-start{top:10px!important;left:10px!important;right:auto!important;bottom:auto!important;padding:0!important;width:auto!important;max-width:calc(100vw - 20px)!important}
+.swal2-popup.swal-custom{width:auto!important;max-width:min(300px,calc(100vw - 20px))!important;padding:8px 12px!important;margin:0!important;border-left:4px solid var(--g)!important;box-shadow:0 4px 12px rgba(0,0,0,.15)!important;display:flex!important;align-items:center!important;grid-template-columns:none!important}
+.swal-custom.swal2-icon-error{border-left-color:var(--red)!important}
+.swal-custom .swal2-title{font-size:13px!important;line-height:1.3!important;font-weight:700!important;margin:0!important;padding:0!important;text-align:left!important}
+.swal-custom .swal2-icon{margin:0 10px 0 0!important;width:22px!important;min-width:22px!important;height:22px!important;border-width:2px!important;transform:scale(.85)}
+.swal-custom .swal2-timer-progress-bar{background:var(--g)!important}
+</style>
+</head>
+<body>
+
+<header class="top-header">
+  <div class="user-info"><h2 id="userPhone">Loading...</h2><p id="userRefCode">REF: ...</p></div>
+  <button class="logout-btn" id="logoutBtn">Logout</button>
+</header>
+
+<section class="action-container">
+  <div class="wallet-card usd">
+    <div class="wallet-title">USD Wallet</div>
+    <div class="wallet-balance-row"><span class="wallet-label">Deposit:</span><span class="wallet-balance" id="usdDeposit">$0.00</span></div>
+    <div class="wallet-balance-row"><span class="wallet-label">Withdraw:</span><span class="wallet-balance" id="usdWithdraw">$0.00</span></div>
+    <div class="wallet-actions">
+      <a class="btn-deposit" href="deposit.html?currency=USD">Deposit</a>
+      <a class="btn-withdraw" href="withdraw.html?currency=USD">Withdraw</a>
+    </div>
+  </div>
+  <div class="wallet-card ngn">
+    <div class="wallet-title">NGN Wallet</div>
+    <div class="wallet-balance-row"><span class="wallet-label">Deposit:</span><span class="wallet-balance" id="ngnDeposit">₦0.00</span></div>
+    <div class="wallet-balance-row"><span class="wallet-label">Withdraw:</span><span class="wallet-balance" id="ngnWithdraw">₦0.00</span></div>
+    <div class="wallet-actions">
+      <a class="btn-deposit" href="deposit.html?currency=NGN">Deposit</a>
+      <a class="btn-withdraw" href="withdraw.html?currency=NGN">Withdraw</a>
+    </div>
+  </div>
+</section>
+
+<section class="tabs-container">
+  <div class="tabs-header">
+    <button class="tab-btn active" onclick="switchTab('usd-plans',this)">USD Plans</button>
+    <button class="tab-btn" onclick="switchTab('ngn-plans',this)">NGN Plans</button>
+    <button class="tab-btn" onclick="switchTab('my-investments',this)">My Investments</button>
+  </div>
+  <div id="usd-plans" class="tab-content active"><div class="plans-grid" id="usdPlansContainer"><div class="loader">Loading plans...</div></div></div>
+  <div id="ngn-plans" class="tab-content"><div class="plans-grid" id="ngnPlansContainer"><div class="loader">Loading plans...</div></div></div>
+  <div id="my-investments" class="tab-content"><div id="myInvestmentsContainer"><div class="loader">Loading your investments...</div></div></div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home</a>
+  <a href="referral.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Referral</a>
+  <a href="profile.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Profile</a>
+</nav>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, collection, query, where, getDocs, updateDoc, serverTimestamp, increment, runTransaction, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+  authDomain: "quilox-59463.firebaseapp.com",
+  projectId: "quilox-59463",
+  storageBucket: "quilox-59463.firebasestorage.app",
+  messagingSenderId: "602079101577",
+  appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+});
+const auth = getAuth(app), db = getFirestore(app);
+
+const RATE = 1500, DURATION = 25, DAY = 86400000;
+const REF_LEVELS = [['referredBy', .10], ['referredByL2', .03], ['referredByL3', .01]];
+const PLANS = [
+  { name: 'Quilox 1', price: 5, roi: 1 }, { name: 'Quilox 2', price: 10, roi: 2 },
+  { name: 'Quilox 3', price: 20, roi: 4 }, { name: 'Quilox 4', price: 50, roi: 10 },
+  { name: 'Quilox 5', price: 100, roi: 20 }, { name: 'Quilox 6', price: 200, roi: 40 }
+];
+let me = null, busy = false;
+
+const r2 = n => Math.round(n * 100) / 100;
+const fmt = (n, c) => (c === 'NGN' ? '₦' : '$') + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const $ = id => document.getElementById(id);
+
+// Small toast for quick notices
+const Toast = Swal.mixin({ toast: true, position: 'top-start', showConfirmButton: false, timer: 3500, timerProgressBar: true, width: 'auto', customClass: { popup: 'swal-custom' } });
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return (window.location.href = 'login.html');
+  me = user;
+  const u = await loadUserData();
+  renderPlans();
+  loadInvestments();
+  if (u && u.welcomeBonusClaimed === false) await welcomeBonus();
+});
+$('logoutBtn').onclick = () => signOut(auth).then(() => (window.location.href = 'login.html'));
+
+window.switchTab = (id, btn) => {
+  document.querySelectorAll('.tab-content,.tab-btn').forEach(e => e.classList.remove('active'));
+  $(id).classList.add('active'); btn.classList.add('active');
+};
+
+/* Register page writes depositBalance / withdrawalBalance (USD value).
+   Move those into the USD/NGN wallets atomically so nothing is lost. */
+async function syncWallets() {
+  const ref = doc(db, 'users', me.uid);
+  return runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return null;
+    const d = snap.data();
+    const ld = Number(d.depositBalance || 0), lw = Number(d.withdrawalBalance || 0);
+    if (ld > 0 || lw > 0) {
+      const cur = d.currency === 'NGN' ? 'NGN' : 'USD', k = cur === 'NGN' ? RATE : 1;
+      const dep = r2(ld * k), wd = r2(lw * k);
+      tx.update(ref, { [`deposit${cur}`]: increment(dep), [`withdrawal${cur}`]: increment(wd), depositBalance: 0, withdrawalBalance: 0 });
+      d[`deposit${cur}`] = (d[`deposit${cur}`] || 0) + dep;
+      d[`withdrawal${cur}`] = (d[`withdrawal${cur}`] || 0) + wd;
+    }
+    return d;
+  });
+}
+
+async function loadUserData() {
+  try {
+    const d = await syncWallets();
+    if (!d) return;
+    $('userPhone').innerText = d.phone;
+    $('userRefCode').innerText = `REF: ${d.referralCode}`;
+    $('usdDeposit').innerText = fmt(d.depositUSD, 'USD');
+    $('usdWithdraw').innerText = fmt(d.withdrawalUSD, 'USD');
+    $('ngnDeposit').innerText = fmt(d.depositNGN, 'NGN');
+    $('ngnWithdraw').innerText = fmt(d.withdrawalNGN, 'NGN');
+    return d;
+  } catch (e) { console.error(e); Toast.fire({ icon: 'error', title: 'Could not load wallet' }); }
+}
+
+/* Welcome bonus: the user picks which wallet receives it (both wallets stay usable afterwards).
+   Only new signups have welcomeBonusClaimed === false, so older accounts are never prompted. */
+const BONUS_USD = 0.5, BONUS_NGN = r2(0.5 * RATE);
+async function claimWelcome(cur) {
+  const ref = doc(db, 'users', me.uid);
+  await runTransaction(db, async tx => {
+    const d = (await tx.get(ref)).data();
+    if (d.welcomeBonusClaimed !== false) throw new Error('CLAIMED');
+    tx.update(ref, { [`deposit${cur}`]: increment(cur === 'NGN' ? BONUS_NGN : BONUS_USD), welcomeBonusClaimed: true, welcomeBonusWallet: cur });
+  });
+  return true;
+}
+async function welcomeBonus() {
+  const pick = cur => async () => {
+    try { return await claimWelcome(cur); }
+    catch (e) {
+      console.error(e);
+      Swal.showValidationMessage(e.message === 'CLAIMED' ? 'Bonus already claimed.' : 'Could not credit your bonus. Try again.');
+      return false;
+    }
+  };
+  const res = await Swal.fire({
+    icon: 'success', title: 'Welcome to Quilox!',
+    html: 'Choose the wallet for your welcome bonus.<br>You can still use both wallets later.',
+    showDenyButton: true,
+    confirmButtonText: `USD Wallet · ${fmt(BONUS_USD, 'USD')}`, confirmButtonColor: '#2563eb',
+    denyButtonText: `NGN Wallet · ${fmt(BONUS_NGN, 'NGN')}`, denyButtonColor: '#1eb852',
+    showLoaderOnConfirm: true, showLoaderOnDeny: true,
+    preConfirm: pick('USD'), preDeny: pick('NGN'),
+    allowOutsideClick: false, allowEscapeKey: false
+  });
+  if (res.isConfirmed || res.isDenied) {
+    const cur = res.isConfirmed ? 'USD' : 'NGN';
+    Toast.fire({ icon: 'success', title: `Welcome bonus credited: ${fmt(cur === 'NGN' ? BONUS_NGN : BONUS_USD, cur)}` });
+    loadUserData();
+  }
+}
+
+/* Plans */
+function planCard(p, cur) {
+  const k = cur === 'NGN' ? RATE : 1, price = p.price * k, roi = p.roi * k;
+  const items = [['Price', fmt(price, cur)], ['Daily ROI', fmt(roi, cur)], ['Duration', `${DURATION} Days`]];
+  return `<div class="plan-card"><div class="plan-name">${p.name} (${cur})</div>
+    <div class="plan-details">${items.map(([l, v]) => `<div class="plan-detail-item"><div class="plan-detail-label">${l}</div><div class="plan-detail-value">${v}</div></div>`).join('')}</div>
+    <button class="btn-buy" onclick="buyPlan('${p.name}',${price},${roi},'${cur}')">Invest ${fmt(price, cur)}</button></div>`;
+}
+function renderPlans() {
+  $('usdPlansContainer').innerHTML = PLANS.map(p => planCard(p, 'USD')).join('');
+  $('ngnPlansContainer').innerHTML = PLANS.map(p => planCard(p, 'NGN')).join('');
+}
+
+/* Buy plan */
+window.buyPlan = async (planName, price, roi, cur) => {
+  if (!me || busy) return;
+  busy = true;
+  try {
+    const d = await syncWallets();
+    const bal = Number(d?.[`deposit${cur}`] || 0);
+
+    // Not enough balance: show the amount still needed, with a close button
+    if (bal + 1e-9 < price) {
+      const res = await Swal.fire({
+        icon: 'error', title: 'Insufficient Balance',
+        html: `${planName} costs <b>${fmt(price, cur)}</b><br>Your ${cur} balance: <b>${fmt(bal, cur)}</b><br>You need <b style="color:#ef4444">${fmt(price - bal, cur)}</b> more`,
+        showCloseButton: true, showCancelButton: true, cancelButtonText: 'Close',
+        confirmButtonText: 'Deposit', confirmButtonColor: '#1eb852', cancelButtonColor: '#6b7280', reverseButtons: true
+      });
+      if (res.isConfirmed) window.location.href = `deposit.html?currency=${cur}`;
+      return;
+    }
+
+    const res = await Swal.fire({
+      icon: 'question', title: 'Confirm Investment',
+      html: `Invest <b>${fmt(price, cur)}</b> in <b>${planName}</b>?<br>Daily ROI: <b>${fmt(roi, cur)}</b> for ${DURATION} days`,
+      showCloseButton: true, showCancelButton: true, confirmButtonText: 'Yes, Invest', cancelButtonText: 'Cancel',
+      confirmButtonColor: '#1eb852', cancelButtonColor: '#6b7280', reverseButtons: true,
+      showLoaderOnConfirm: true, allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: async () => {
+        try { return await executePurchase(planName, price, roi, cur); }
+        catch (e) {
+          console.error(e);
+          Swal.showValidationMessage(e.message === 'INSUFFICIENT' ? 'Your balance is no longer enough for this plan.' : 'Investment failed. Please try again.');
+          return false;
+        }
+      }
+    });
+    if (!res.isConfirmed) return;
+
+    await Swal.fire({ icon: 'success', title: 'Investment Successful!', text: `${planName} is now active.`, timer: 2000, showConfirmButton: false, showCloseButton: true });
+    loadUserData(); loadInvestments();
+  } finally { busy = false; }
+};
+
+// One atomic step: check balance, deduct, create investment, flag first purchase.
+async function executePurchase(planName, price, roi, cur) {
+  const userRef = doc(db, 'users', me.uid);
+  const invRef = doc(collection(db, 'investments'));
+  const u = await runTransaction(db, async tx => {
+    const d = (await tx.get(userRef)).data();
+    if (Number(d[`deposit${cur}`] || 0) + 1e-9 < price) throw new Error('INSUFFICIENT');
+    const upd = { [`deposit${cur}`]: increment(-price), hasInvested: true };
+    if (!d.hasInvested) Object.assign(upd, { firstPlanName: planName, firstPlanAmount: price, firstPlanCurrency: cur }); // first-plan record for referral tracking
+    tx.update(userRef, upd);
+    tx.set(invRef, {
+      userId: me.uid, planName, amount: price, dailyROI: roi, currency: cur,
+      startDate: serverTimestamp(), endDate: Timestamp.fromMillis(Date.now() + DURATION * DAY),
+      lastPayout: serverTimestamp(), daysPaid: 0, status: 'active'
+    });
+    return { first: !d.hasInvested, d };
+  });
+  if (u.first) await processReferral(u.d, price, cur); // a referral failure never breaks the purchase
+  return true;
+}
+
+/* Referral: 10% / 3% / 1% on the referred user's FIRST purchase, into the upline's withdrawal wallet */
+async function processReferral(d, amount, cur) {
+  const jobs = REF_LEVELS
+    .map(([key, pct]) => ({ id: d[key], bonus: r2(amount * pct) }))
+    .filter(l => l.id && l.id !== me.uid && l.bonus > 0)
+    .map(l => updateDoc(doc(db, 'users', l.id), { [`withdrawal${cur}`]: increment(l.bonus) }));
+  (await Promise.allSettled(jobs)).forEach(r => r.status === 'rejected' && console.error('Referral credit failed:', r.reason));
+}
+
+/* Investments + daily ROI (atomic, cannot be credited twice) */
+async function creditROI(invId) {
+  const invRef = doc(db, 'investments', invId);
+  try {
+    return await runTransaction(db, async tx => {
+      const s = await tx.get(invRef);
+      if (!s.exists()) return null;
+      const inv = s.data();
+      if (inv.status !== 'active' || !inv.lastPayout?.toMillis) return null;
+      const last = inv.lastPayout.toMillis(), paid = inv.daysPaid || 0;
+      const pay = Math.min(Math.floor((Date.now() - last) / DAY), DURATION - paid);
+      if (pay <= 0) return null;
+      const total = r2(inv.dailyROI * pay);
+      tx.update(doc(db, 'users', inv.userId), { [`withdrawal${inv.currency}`]: increment(total) });
+      tx.update(invRef, { daysPaid: paid + pay, lastPayout: Timestamp.fromMillis(last + pay * DAY), status: paid + pay >= DURATION ? 'completed' : 'active' });
+      return { total, cur: inv.currency };
+    });
+  } catch (e) { console.error('ROI credit failed:', e); return null; }
+}
+
+async function loadInvestments() {
+  const box = $('myInvestmentsContainer');
+  const q = query(collection(db, 'investments'), where('userId', '==', me.uid), where('status', '==', 'active'));
+  let snap = await getDocs(q);
+  const credits = (await Promise.all(snap.docs.map(x => creditROI(x.id)))).filter(Boolean);
+  if (credits.length) {
+    snap = await getDocs(q);
+    loadUserData();
+    const sums = {}; credits.forEach(c => (sums[c.cur] = (sums[c.cur] || 0) + c.total));
+    Toast.fire({ icon: 'success', title: 'ROI Credited: ' + Object.entries(sums).map(([c, t]) => fmt(t, c)).join(' + ') });
+  }
+  if (snap.empty) return (box.innerHTML = '<div class="loader">No active investments yet.</div>');
+
+  box.innerHTML = snap.docs.map(x => {
+    const v = x.data();
+    return `<div class="investment-card">
+      <div class="inv-header"><div class="inv-title">${v.planName} (${v.currency})</div><div class="inv-status">Active</div></div>
+      <div class="inv-details">
+        <div class="inv-detail"><span>Invested</span><strong>${fmt(v.amount, v.currency)}</strong></div>
+        <div class="inv-detail"><span>Daily ROI</span><strong>${fmt(v.dailyROI, v.currency)}</strong></div>
+        <div class="inv-detail"><span>Duration</span><strong>${DURATION} Days</strong></div>
+        <div class="inv-detail"><span>Days Paid</span><strong>${v.daysPaid || 0} / ${DURATION}</strong></div>
+      </div></div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
