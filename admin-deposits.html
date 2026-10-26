@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quilox Admin - Deposit Approvals</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-green: #1eb852;
+            --primary-dark: #159b42;
+            --text-dark: #1a1a1a;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --bg-main: #f1f5f9;
+            --bg-white: #ffffff;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --danger-red: #ef4444;
+            --warning-yellow: #f59e0b;
+            --admin-dark: #0f172a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-dark); padding-bottom: 90px; }
+
+        /* --- Top Header --- */
+        .top-header { background: var(--admin-dark); padding: 20px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; color: white; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .back-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
+        .top-header h1 { font-size: 18px; font-weight: 700; }
+
+        /* --- Tabs --- */
+        .tabs-container { padding: 20px; }
+        .tabs-header { display: flex; background: var(--bg-white); border-radius: 10px; padding: 5px; box-shadow: var(--card-shadow); margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px 5px; text-align: center; font-size: 13px; font-weight: 700; color: var(--text-muted); background: transparent; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary-green); color: white; box-shadow: 0 2px 8px rgba(30,184,82,0.3); }
+
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Deposit Card --- */
+        .deposit-card { background: var(--bg-white); border-radius: 12px; padding: 20px; box-shadow: var(--card-shadow); margin-bottom: 15px; border-left: 4px solid var(--warning-yellow); }
+        .deposit-card.approved { border-left-color: var(--primary-green); }
+        .deposit-card.rejected { border-left-color: var(--danger-red); }
+        
+        .dp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
+        .dp-user h4 { font-size: 15px; font-weight: 800; }
+        .dp-user p { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+        .dp-amount { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 800; color: var(--primary-green); text-align: right; }
+        .dp-currency { font-size: 11px; color: var(--text-muted); text-align: right; text-transform: uppercase; font-weight: 700; }
+
+        .dp-details { font-size: 13px; color: var(--text-dark); margin-bottom: 15px; line-height: 1.8; background: var(--bg-main); padding: 10px; border-radius: 8px; }
+        .dp-details span { color: var(--text-muted); font-weight: 600; }
+        .dp-details strong { font-family: 'DM Mono', monospace; word-break: break-all; }
+
+        .dp-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-view { flex: 1; background: var(--bg-main); color: var(--text-dark); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; text-align: center; transition: 0.2s; }
+        .btn-view:hover { border-color: var(--admin-dark); }
+        .btn-approve { flex: 1; background: var(--primary-green); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-approve:hover { background: var(--primary-dark); }
+        .btn-reject { flex: 1; background: var(--danger-red); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-reject:hover { background: #dc2626; }
+
+        .status-text { font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; display: inline-block; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-approved { background: #ecfdf5; color: var(--primary-green); }
+        .status-rejected { background: #fef2f2; color: var(--danger-red); }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-white); display: flex; justify-content: space-around; padding: 10px 0 15px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); border-top: 1px solid var(--border-color); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary-green); }
+        .nav-item svg { width: 20px; height: 20px; margin-bottom: 4px; }
+
+        /* --- Toast --- */
+        .swal2-container.swal2-top-left { top: 15px !important; left: 15px !important; max-width: 320px !important; z-index: 99999 !important; }
+        .swal-custom { padding: 10px 14px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; border-left: 4px solid var(--primary-green) !important; display: flex !important; align-items: center !important; }
+        .swal-custom.swal2-icon-error { border-left-color: var(--danger-red) !important; }
+        .swal-custom .swal2-title { font-size: 13px !important; font-weight: 700 !important; margin: 0 !important; padding: 0 !important; }
+        .swal-custom .swal2-html-container { font-size: 12px !important; margin: 0 !important; padding: 0 !important; color: var(--text-muted) !important; }
+        .swal-custom .swal2-icon { margin: 0 10px 0 0 !important; width: 24px !important; height: 24px !important; display: flex !important; }
+        .loader { display: flex; justify-content: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <header class="top-header">
+        <a href="admin.html" class="back-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </a>
+        <h1>Deposit Approvals</h1>
+    </header>
+
+    <section class="tabs-container">
+        <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('pending', this)">Pending</button>
+            <button class="tab-btn" onclick="switchTab('history', this)">History</button>
+        </div>
+
+        <div id="pending" class="tab-content active">
+            <div id="pendingContainer">
+                <div class="loader">Loading pending deposits...</div>
+            </div>
+        </div>
+
+        <div id="history" class="tab-content">
+            <div id="historyContainer">
+                <div class="loader">Loading history...</div>
+            </div>
+        </div>
+    </section>
+
+    <nav class="bottom-nav">
+        <a href="admin.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            Dash
+        </a>
+        <a href="admin-deposits.html" class="nav-item active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+            Deps
+        </a>
+        <a href="admin-withdrawals.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Wds
+        </a>
+        <a href="admin-users.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            Users
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+            authDomain: "quilox-59463.firebaseapp.com",
+            projectId: "quilox-59463",
+            storageBucket: "quilox-59463.firebasestorage.app",
+            messagingSenderId: "602079101577",
+            appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-left', showConfirmButton: false, timer: 3500, timerProgressBar: true,
+            customClass: { popup: 'swal-custom' }
+        });
+
+        // Admin Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    loadDeposits();
+                } else {
+                    window.location.href = 'admin-login.html';
+                }
+            } else {
+                window.location.href = 'admin-login.html';
+            }
+        });
+
+        window.switchTab = function(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        };
+
+        function loadDeposits() {
+            const pendingContainer = document.getElementById('pendingContainer');
+            const historyContainer = document.getElementById('historyContainer');
+
+            // Use onSnapshot for real-time updates
+            const q = query(collection(db, "deposits"));
+            onSnapshot(q, (snapshot) => {
+                let pending = [];
+                let history = [];
+
+                snapshot.forEach(doc => {
+                    const data = { id: doc.id, ...doc.data() };
+                    if (data.status === 'pending') pending.push(data);
+                    else history.push(data);
+                });
+
+                // Sort by date
+                pending.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                history.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+
+                // Render Pending
+                if (pending.length === 0) {
+                    pendingContainer.innerHTML = `<div class="loader" style="color:var(--text-muted);">No pending deposits.</div>`;
+                } else {
+                    pendingContainer.innerHTML = '';
+                    pending.forEach(dep => pendingContainer.appendChild(createCard(dep, true)));
+                }
+
+                // Render History
+                if (history.length === 0) {
+                    historyContainer.innerHTML = `<div class="loader" style="color:var(--text-muted);">No deposit history.</div>`;
+                } else {
+                    historyContainer.innerHTML = '';
+                    history.forEach(dep => historyContainer.appendChild(createCard(dep, false)));
+                }
+            });
+        }
+
+        function createCard(dep, isPending) {
+            const sym = dep.currency === 'USD' ? '$' : '₦';
+            const dateStr = dep.createdAt ? dep.createdAt.toDate().toLocaleString() : 'N/A';
+            
+            let statusClass = 'status-pending';
+            let statusText = 'Pending';
+            let cardClass = '';
+            if (dep.status === 'approved') { statusClass = 'status-approved'; statusText = 'Approved'; cardClass = 'approved'; }
+            if (dep.status === 'rejected') { statusClass = 'status-rejected'; statusText = 'Rejected'; cardClass = 'rejected'; }
+
+            let proofDetails = '';
+            if (dep.currency === 'USD') {
+                proofDetails = `
+                    <div><span>Sender Address:</span> <strong>${dep.paymentProof?.senderAddress || 'N/A'}</strong></div>
+                    <div><span>TX Hash:</span> <strong>${dep.paymentProof?.txHash || 'N/A'}</strong></div>
+                `;
+            } else {
+                proofDetails = `
+                    <div><span>Sender Name:</span> <strong>${dep.paymentProof?.senderName || 'N/A'}</strong></div>
+                `;
+            }
+
+            const card = document.createElement('div');
+            card.className = `deposit-card ${cardClass}`;
+            card.innerHTML = `
+                <div class="dp-header">
+                    <div class="dp-user">
+                        <h4>${dep.phone}</h4>
+                        <p>${dateStr}</p>
+                    </div>
+                    <div>
+                        <div class="dp-amount">${sym}${dep.amount.toLocaleString()}</div>
+                        <div class="dp-currency">${dep.currency}</div>
+                    </div>
+                </div>
+                <div class="dp-details">
+                    ${proofDetails}
+                    <div style="margin-top: 10px;">
+                        <span class="status-text ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+                <div class="dp-actions">
+                    <button class="btn-view" onclick="viewReceipt('${dep.receiptBase64}')">View Receipt</button>
+                    ${isPending ? `
+                        <button class="btn-approve" onclick="approveDeposit('${dep.id}', '${dep.userId}', '${dep.currency}', ${dep.amount})">Approve</button>
+                        <button class="btn-reject" onclick="rejectDeposit('${dep.id}')">Reject</button>
+                    ` : ''}
+                </div>
+            `;
+            return card;
+        }
+
+        window.viewReceipt = function(base64Img) {
+            if (!base64Img) {
+                return Toast.fire({ icon: 'error', title: 'No receipt uploaded' });
+            }
+            Swal.fire({
+                title: 'Payment Receipt',
+                imageUrl: base64Img,
+                imageAlt: 'Receipt',
+                width: '90%',
+                confirmButtonColor: '#1eb852',
+                confirmButtonText: 'Close'
+            });
+        };
+
+        window.approveDeposit = async function(depositId, userId, currency, amount) {
+            const confirm = await Swal.fire({
+                title: 'Approve Deposit?',
+                text: `This will credit the user's ${currency} deposit wallet with ${currency === 'USD' ? '$' : '₦'}${amount.toLocaleString()}.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1eb852',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, Approve'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    // 1. Update deposit status
+                    await updateDoc(doc(db, "deposits", depositId), {
+                        status: 'approved',
+                        approvedAt: serverTimestamp()
+                    });
+
+                    // 2. Credit user's wallet
+                    const walletField = currency === 'USD' ? 'depositUSD' : 'depositNGN';
+                    await updateDoc(doc(db, "users", userId), {
+                        [walletField]: increment(amount)
+                    });
+
+                    Toast.fire({ icon: 'success', title: 'Deposit Approved & Credited!' });
+
+                } catch (error) {
+                    console.error(error);
+                    Toast.fire({ icon: 'error', title: 'Failed to approve deposit' });
+                }
+            }
+        };
+
+        window.rejectDeposit = async function(depositId) {
+            const { value: reason } = await Swal.fire({
+                title: 'Reject Deposit',
+                input: 'text',
+                inputPlaceholder: 'Reason for rejection (optional)',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Reject'
+            });
+
+            if (reason !== undefined) {
+                try {
+                    await updateDoc(doc(db, "deposits", depositId), {
+                        status: 'rejected',
+                        rejectReason: reason || 'No reason provided',
+                        rejectedAt: serverTimestamp()
+                    });
+                    Toast.fire({ icon: 'success', title: 'Deposit rejected' });
+                } catch (error) {
+                    console.error(error);
+                    Toast.fire({ icon: 'error', title: 'Failed to reject deposit' });
+                }
+            }
+        };
+    </script>
+</body>
+</html>
