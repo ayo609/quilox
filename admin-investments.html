@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quilox Admin - Manage Investments</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-green: #1eb852;
+            --primary-dark: #159b42;
+            --text-dark: #1a1a1a;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --bg-main: #f1f5f9;
+            --bg-white: #ffffff;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --danger-red: #ef4444;
+            --warning-yellow: #f59e0b;
+            --admin-dark: #0f172a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-dark); padding-bottom: 90px; }
+
+        /* --- Top Header --- */
+        .top-header { background: var(--admin-dark); padding: 20px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; color: white; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .back-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
+        .top-header h1 { font-size: 18px; font-weight: 700; }
+
+        /* --- Stats Bar --- */
+        .stats-bar { padding: 20px 20px 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-white); padding: 12px; border-radius: 10px; box-shadow: var(--card-shadow); text-align: center; border-top: 3px solid var(--primary-green); }
+        .stat-card.usd { border-top-color: #2563eb; }
+        .stat-card.ngn { border-top-color: var(--warning-yellow); }
+        .stat-value { font-size: 14px; font-weight: 800; font-family: 'DM Mono', monospace; margin-bottom: 3px; }
+        .stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+
+        /* --- Search & Filter --- */
+        .search-section { padding: 0 20px; }
+        .search-box { display: flex; background: var(--bg-white); border-radius: 10px; padding: 5px 15px; box-shadow: var(--card-shadow); margin-bottom: 15px; align-items: center; border: 1px solid var(--border-color); }
+        .search-box input { flex: 1; border: none; outline: none; padding: 10px; font-size: 14px; background: transparent; }
+        
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-white); font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .filter-btn.active { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+
+        /* --- Investment Cards --- */
+        .investments-container { padding: 0 20px; }
+        .inv-card { background: var(--bg-white); border-radius: 12px; padding: 15px; box-shadow: var(--card-shadow); margin-bottom: 15px; cursor: pointer; transition: 0.2s; border-left: 4px solid var(--primary-green); }
+        .inv-card:hover { transform: translateY(-2px); }
+        .inv-card.completed { border-left-color: var(--text-muted); opacity: 0.85; }
+        .inv-card.cancelled { border-left-color: var(--danger-red); opacity: 0.7; }
+
+        .ic-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
+        .ic-info h4 { font-size: 15px; font-weight: 800; }
+        .ic-info p { font-size: 12px; color: var(--text-muted); margin-top: 3px; font-family: 'DM Mono', monospace; }
+        .ic-amount { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 800; color: var(--primary-green); text-align: right; }
+        
+        .ic-progress { margin-top: 10px; }
+        .progress-text { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; }
+        .progress-bar { background: var(--bg-main); height: 8px; border-radius: 4px; overflow: hidden; }
+        .progress-fill { background: var(--primary-green); height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .inv-card.completed .progress-fill { background: var(--text-muted); }
+        .inv-card.cancelled .progress-fill { background: var(--danger-red); }
+
+        /* --- Modal Styles --- */
+        .profile-modal { padding: 0 !important; border-radius: 15px !important; overflow: hidden; max-width: 500px !important; width: 95% !important; }
+        .modal-header { background: var(--admin-dark); color: white; padding: 20px; text-align: left; }
+        .modal-header h2 { font-size: 20px; font-weight: 800; margin-bottom: 5px; }
+        .modal-header p { font-size: 12px; color: #94a3b8; font-family: 'DM Mono', monospace; }
+        .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; text-align: left; }
+
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .detail-box { background: var(--bg-main); padding: 10px; border-radius: 8px; }
+        .detail-box h5 { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .detail-box p { font-size: 13px; font-weight: 800; font-family: 'DM Mono', monospace; }
+
+        .admin-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+        .action-btn { padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border: none; }
+        .btn-credit-roi { background: var(--primary-green); color: white; }
+        .btn-cancel { background: var(--danger-red); color: white; }
+        .btn-delete { background: #fef2f2; color: var(--danger-red); border: 1px solid #fecaca; grid-column: span 2; }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-white); display: flex; justify-content: space-around; padding: 10px 0 15px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); border-top: 1px solid var(--border-color); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary-green); }
+        .nav-item svg { width: 20px; height: 20px; margin-bottom: 4px; }
+
+        /* --- Toast --- */
+        .swal2-container.swal2-top-left { top: 15px !important; left: 15px !important; max-width: 320px !important; z-index: 99999 !important; }
+        .swal-custom { padding: 10px 14px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; border-left: 4px solid var(--primary-green) !important; display: flex !important; align-items: center !important; }
+        .swal-custom.swal2-icon-error { border-left-color: var(--danger-red) !important; }
+        .swal-custom .swal2-title { font-size: 13px !important; font-weight: 700 !important; margin: 0 !important; padding: 0 !important; }
+        .swal-custom .swal2-html-container { font-size: 12px !important; margin: 0 !important; padding: 0 !important; color: var(--text-muted) !important; }
+        .swal-custom .swal2-icon { margin: 0 10px 0 0 !important; width: 24px !important; height: 24px !important; display: flex !important; }
+        .loader { display: flex; justify-content: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <header class="top-header">
+        <a href="admin.html" class="back-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </a>
+        <h1>Manage Investments</h1>
+    </header>
+
+    <section class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value" id="totalPlans">0</div>
+            <div class="stat-label">Active Plans</div>
+        </div>
+        <div class="stat-card usd">
+            <div class="stat-value" id="totalUSD">$0</div>
+            <div class="stat-label">USD Invested</div>
+        </div>
+        <div class="stat-card ngn">
+            <div class="stat-value" id="totalNGN">₦0</div>
+            <div class="stat-label">NGN Invested</div>
+        </div>
+    </section>
+
+    <section class="search-section">
+        <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input type="text" id="searchInput" placeholder="Search by phone or plan..." oninput="filterInvestments()">
+        </div>
+        
+        <div class="filter-tabs">
+            <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+            <button class="filter-btn" onclick="setFilter('active', this)">Active</button>
+            <button class="filter-btn" onclick="setFilter('completed', this)">Completed</button>
+            <button class="filter-btn" onclick="setFilter('cancelled', this)">Cancelled</button>
+        </div>
+    </section>
+
+    <section class="investments-container" id="investmentsContainer">
+        <div class="loader">Loading investments...</div>
+    </section>
+
+    <nav class="bottom-nav">
+        <a href="admin.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            Dash
+        </a>
+        <a href="admin-deposits.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+            Deps
+        </a>
+        <a href="admin-withdrawals.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Wds
+        </a>
+        <a href="admin-users.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            Users
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, onSnapshot, updateDoc, deleteDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+            authDomain: "quilox-59463.firebaseapp.com",
+            projectId: "quilox-59463",
+            storageBucket: "quilox-59463.firebasestorage.app",
+            messagingSenderId: "602079101577",
+            appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-left', showConfirmButton: false, timer: 3500, timerProgressBar: true,
+            customClass: { popup: 'swal-custom' }
+        });
+
+        let allInvestments = [];
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    loadInvestments();
+                } else {
+                    window.location.href = 'admin-login.html';
+                }
+            } else {
+                window.location.href = 'admin-login.html';
+            }
+        });
+
+        function loadInvestments() {
+            const container = document.getElementById('investmentsContainer');
+            onSnapshot(collection(db, "investments"), (snapshot) => {
+                allInvestments = [];
+                let activeCount = 0, totalUSD = 0, totalNGN = 0;
+
+                snapshot.forEach(doc => {
+                    const data = { id: doc.id, ...doc.data() };
+                    allInvestments.push(data);
+                    
+                    if (data.status === 'active') {
+                        activeCount++;
+                        if (data.currency === 'USD') totalUSD += data.amount;
+                        else totalNGN += data.amount;
+                    }
+                });
+
+                // Update Stats
+                document.getElementById('totalPlans').innerText = activeCount;
+                document.getElementById('totalUSD').innerText = `$${totalUSD.toLocaleString()}`;
+                document.getElementById('totalNGN').innerText = `₦${totalNGN.toLocaleString()}`;
+
+                allInvestments.sort((a, b) => (b.startDate?.toMillis() || 0) - (a.startDate?.toMillis() || 0));
+                renderInvestments();
+            });
+        }
+
+        window.setFilter = function(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderInvestments();
+        };
+
+        window.filterInvestments = function() {
+            searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            renderInvestments();
+        };
+
+        function renderInvestments() {
+            const container = document.getElementById('investmentsContainer');
+            
+            let filtered = allInvestments.filter(inv => {
+                // If search, we need to fetch the user's phone. For now, search by plan name.
+                // To search by phone, we would need to join user data.
+                const matchesSearch = inv.planName?.toLowerCase().includes(searchTerm) || inv.userId?.includes(searchTerm);
+                if (!matchesSearch) return false;
+
+                if (currentFilter !== 'all') return inv.status === currentFilter;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="loader" style="color:var(--text-muted);">No investments found.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach(inv => {
+                const sym = inv.currency === 'USD' ? '$' : '₦';
+                const progress = (inv.daysPaid / 25) * 100;
+                let cardClass = inv.status === 'completed' ? 'completed' : inv.status === 'cancelled' ? 'cancelled' : '';
+
+                const card = document.createElement('div');
+                card.className = `inv-card ${cardClass}`;
+                card.onclick = () => openInvestmentDetail(inv.id);
+                card.innerHTML = `
+                    <div class="ic-header">
+                        <div class="ic-info">
+                            <h4>${inv.planName}</h4>
+                            <p>User: ${inv.phone || inv.userId.substring(0, 8) + '...'}</p>
+                        </div>
+                        <div class="ic-amount">${sym}${inv.amount.toLocaleString()}</div>
+                    </div>
+                    <div class="ic-progress">
+                        <div class="progress-text">
+                            <span>Days Paid: ${inv.daysPaid}/25</span>
+                            <span>Status: ${inv.status.toUpperCase()}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%;"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.openInvestmentDetail = async function(invId) {
+            const inv = allInvestments.find(x => x.id === invId);
+            if (!inv) return;
+
+            // Fetch user's phone
+            const userDoc = await getDoc(doc(db, "users", inv.userId));
+            const phone = userDoc.exists() ? userDoc.data().phone : 'Unknown User';
+
+            const sym = inv.currency === 'USD' ? '$' : '₦';
+            const startDate = inv.startDate ? inv.startDate.toDate().toLocaleDateString() : 'N/A';
+            const lastPayout = inv.lastPayout ? inv.lastPayout.toDate().toLocaleString() : 'N/A';
+
+            Swal.fire({
+                html: `
+                    <div class="modal-header">
+                        <h2>${inv.planName}</h2>
+                        <p>User: ${phone}</p>
+                    </div>
+                    <div class="modal-body">
+                        
+                        <div class="detail-grid">
+                            <div class="detail-box"><h5>Amount Invested</h5><p>${sym}${inv.amount.toLocaleString()}</p></div>
+                            <div class="detail-box"><h5>Daily ROI</h5><p>${sym}${inv.dailyROI.toLocaleString()}</p></div>
+                            <div class="detail-box"><h5>Days Paid</h5><p>${inv.daysPaid} / 25</p></div>
+                            <div class="detail-box"><h5>Total ROI Earned</h5><p>${sym}${(inv.dailyROI * inv.daysPaid).toLocaleString()}</p></div>
+                        </div>
+
+                        <div style="font-size:12px; color:var(--text-muted); line-height:1.8;">
+                            <div><strong>Status:</strong> ${inv.status.toUpperCase()}</div>
+                            <div><strong>Start Date:</strong> ${startDate}</div>
+                            <div><strong>Last Payout:</strong> ${lastPayout}</div>
+                        </div>
+
+                        <div class="admin-actions">
+                            ${inv.status === 'active' ? `
+                                <button class="action-btn btn-credit-roi" onclick="forceCreditROI('${inv.id}')">💵 Force Credit ROI</button>
+                                <button class="action-btn btn-cancel" onclick="cancelInvestment('${inv.id}')">❌ Cancel Plan</button>
+                            ` : ''}
+                            <button class="action-btn btn-delete" onclick="deleteInvestment('${inv.id}')">🗑️ Delete Record</button>
+                        </div>
+
+                    </div>
+                `,
+                showConfirmButton: false,
+                showCloseButton: true,
+                customClass: { popup: 'profile-modal' },
+                width: '95%'
+            });
+        };
+
+        window.forceCreditROI = async function(invId) {
+            const inv = allInvestments.find(x => x.id === invId);
+            if (!inv) return;
+
+            const confirm = await Swal.fire({
+                title: 'Force Credit ROI?',
+                text: `This will instantly credit ${inv.currency === 'USD' ? '$' : '₦'}${inv.dailyROI} to the user's withdrawal wallet and increment their days paid.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#1eb852',
+                confirmButtonText: 'Yes, Credit Now'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const walletField = inv.currency === 'USD' ? 'withdrawalUSD' : 'withdrawalNGN';
+                    
+                    // 1. Credit user's withdrawal wallet
+                    await updateDoc(doc(db, "users", inv.userId), {
+                        [walletField]: increment(inv.dailyROI)
+                    });
+
+                    // 2. Update investment record
+                    const newDays = inv.daysPaid + 1;
+                    const newStatus = newDays >= 25 ? 'completed' : 'active';
+                    await updateDoc(doc(db, "investments", invId), {
+                        daysPaid: newDays,
+                        lastPayout: serverTimestamp(),
+                        status: newStatus
+                    });
+
+                    Toast.fire({ icon: 'success', title: 'ROI Credited!' });
+                    Swal.close();
+                } catch (error) {
+                    console.error(error);
+                    Toast.fire({ icon: 'error', title: 'Failed to credit ROI' });
+                }
+            }
+        };
+
+        window.cancelInvestment = async function(invId) {
+            const confirm = await Swal.fire({
+                title: 'Cancel Investment?',
+                text: "This will stop the plan immediately. The user will not receive any further ROI.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, Cancel Plan'
+            });
+
+            if (confirm.isConfirmed) {
+                await updateDoc(doc(db, "investments", invId), { status: 'cancelled' });
+                Toast.fire({ icon: 'success', title: 'Investment Cancelled' });
+                Swal.close();
+            }
+        };
+
+        window.deleteInvestment = async function(invId) {
+            const confirm = await Swal.fire({
+                title: 'Delete Record?',
+                text: "This will permanently delete the investment record from Firestore. This action CANNOT be undone!",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, Delete'
+            });
+
+            if (confirm.isConfirmed) {
+                await deleteDoc(doc(db, "investments", invId));
+                Toast.fire({ icon: 'success', title: 'Investment Deleted' });
+                Swal.close();
+            }
+        };
+    </script>
+</body>
+</html>
