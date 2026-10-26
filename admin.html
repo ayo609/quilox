@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quilox - Admin Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-green: #1eb852;
+            --primary-dark: #159b42;
+            --text-dark: #1a1a1a;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --bg-main: #f1f5f9;
+            --bg-white: #ffffff;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --danger-red: #ef4444;
+            --warning-yellow: #f59e0b;
+            --admin-dark: #0f172a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-dark); padding-bottom: 90px; }
+
+        /* --- Top Header --- */
+        .top-header { background: var(--admin-dark); padding: 20px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .admin-info h2 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+        .admin-info p { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 5px; }
+        .live-dot { width: 8px; height: 8px; background: var(--primary-green); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .logout-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .logout-btn:hover { background: var(--danger-red); border-color: var(--danger-red); }
+
+        /* --- Quick Actions --- */
+        .quick-actions { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: -10px; }
+        .action-btn { background: var(--bg-white); padding: 15px; border-radius: 10px; box-shadow: var(--card-shadow); text-decoration: none; color: var(--text-dark); display: flex; align-items: center; gap: 10px; transition: 0.2s; border: 1px solid var(--border-color); }
+        .action-btn:hover { transform: translateY(-2px); border-color: var(--primary-green); }
+        .action-icon { width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #ecfdf5; color: var(--primary-green); }
+        .action-btn span { font-size: 13px; font-weight: 700; }
+
+        /* --- Stats Grid --- */
+        .stats-section { padding: 0 20px; margin-bottom: 20px; }
+        .section-title { font-size: 14px; font-weight: 800; margin-bottom: 10px; color: var(--admin-dark); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stat-card { background: var(--bg-white); padding: 15px; border-radius: 12px; box-shadow: var(--card-shadow); text-align: center; border-top: 3px solid var(--primary-green); }
+        .stat-card.revenue { border-top-color: #2563eb; }
+        .stat-value { font-size: 18px; font-weight: 800; font-family: 'DM Mono', monospace; color: var(--text-dark); margin-bottom: 5px; }
+        .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+
+        /* --- Pending Actions --- */
+        .pending-section { padding: 0 20px; margin-bottom: 20px; }
+        .pending-card { background: var(--bg-white); padding: 15px; border-radius: 12px; box-shadow: var(--card-shadow); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--warning-yellow); }
+        .pending-info h4 { font-size: 14px; font-weight: 700; }
+        .pending-info p { font-size: 12px; color: var(--text-muted); }
+        .pending-badge { background: #fef3c7; color: #d97706; padding: 5px 10px; border-radius: 8px; font-weight: 800; font-size: 14px; }
+        .review-btn { background: var(--admin-dark); color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700; }
+
+        /* --- Recent Activity --- */
+        .activity-section { padding: 0 20px; margin-bottom: 30px; }
+        .activity-card { background: var(--bg-white); padding: 15px; border-radius: 12px; box-shadow: var(--card-shadow); }
+        .activity-item { padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; color: var(--text-muted); }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-item strong { color: var(--text-dark); }
+
+        /* --- Danger Zone (Reset) --- */
+        .danger-section { padding: 0 20px; margin-bottom: 30px; }
+        .danger-card { background: #fef2f2; padding: 20px; border-radius: 12px; border: 1px solid #fecaca; }
+        .danger-card h3 { color: var(--danger-red); font-size: 15px; font-weight: 800; margin-bottom: 5px; }
+        .danger-card p { font-size: 12px; color: #991b1b; margin-bottom: 15px; }
+        .btn-danger { width: 100%; background: var(--danger-red); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-danger-outline { width: 100%; background: transparent; color: var(--danger-red); border: 1px solid var(--danger-red); padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .btn-danger-outline:hover { background: #fee2e2; }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-white); display: flex; justify-content: space-around; padding: 10px 0 15px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); border-top: 1px solid var(--border-color); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary-green); }
+        .nav-item svg { width: 20px; height: 20px; margin-bottom: 4px; }
+
+        /* --- Toast --- */
+        .swal2-container.swal2-top-left { top: 15px !important; left: 15px !important; max-width: 320px !important; z-index: 99999 !important; }
+        .swal-custom { padding: 10px 14px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; border-left: 4px solid var(--primary-green) !important; display: flex !important; align-items: center !important; }
+        .swal-custom.swal2-icon-error { border-left-color: var(--danger-red) !important; }
+        .swal-custom .swal2-title { font-size: 13px !important; font-weight: 700 !important; margin: 0 !important; padding: 0 !important; }
+        .swal-custom .swal2-html-container { font-size: 12px !important; margin: 0 !important; padding: 0 !important; color: var(--text-muted) !important; }
+        .swal-custom .swal2-icon { margin: 0 10px 0 0 !important; width: 24px !important; height: 24px !important; display: flex !important; }
+        .loader { display: flex; justify-content: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <header class="top-header">
+        <div class="admin-info">
+            <h2 id="adminPhone">Admin Loading...</h2>
+            <p><span class="live-dot"></span> System Online</p>
+        </div>
+        <button class="logout-btn" onclick="adminLogout()">Logout</button>
+    </header>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+        <a href="admin-deposits.html" class="action-btn">
+            <div class="action-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg></div>
+            <span>Deposits</span>
+        </a>
+        <a href="admin-withdrawals.html" class="action-btn">
+            <div class="action-icon" style="background:#eff6ff; color:#2563eb;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+            <span>Withdrawals</span>
+        </a>
+        <a href="admin-users.html" class="action-btn">
+            <div class="action-icon" style="background:#f5f3ff; color:#8b5cf6;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div>
+            <span>Users</span>
+        </a>
+        <a href="admin-investments.html" class="action-btn">
+            <div class="action-icon" style="background:#fff7ed; color:#f97316;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></div>
+            <span>Investments</span>
+        </a>
+    </section>
+
+    <!-- Main Stats -->
+    <section class="stats-section">
+        <div class="section-title">Platform Statistics</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalInvestments">0</div>
+                <div class="stat-label">Active Investments</div>
+            </div>
+            <div class="stat-card revenue">
+                <div class="stat-value" id="totalDeposits">$0 / ₦0</div>
+                <div class="stat-label">Approved Deposits</div>
+            </div>
+            <div class="stat-card revenue">
+                <div class="stat-value" id="totalWithdrawals">$0 / ₦0</div>
+                <div class="stat-label">Paid Withdrawals</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pending Actions -->
+    <section class="pending-section">
+        <div class="section-title">Needs Attention</div>
+        
+        <div class="pending-card">
+            <div class="pending-info">
+                <h4>Pending Deposits</h4>
+                <p>Waiting for manual approval</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="pending-badge" id="pendingDeposits">0</div>
+                <a href="admin-deposits.html" class="review-btn">Review</a>
+            </div>
+        </div>
+
+        <div class="pending-card" style="border-left-color:#2563eb;">
+            <div class="pending-info">
+                <h4>Pending Withdrawals</h4>
+                <p>Waiting to be paid out</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="pending-badge" id="pendingWithdrawals" style="background:#eff6ff; color:#2563eb;">0</div>
+                <a href="admin-withdrawals.html" class="review-btn">Review</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="activity-section">
+        <div class="section-title">Recent Activity</div>
+        <div class="activity-card" id="activityFeed">
+            <div class="loader">Loading activity...</div>
+        </div>
+    </section>
+
+    <!-- Danger Zone (Erase & Reset) -->
+    <section class="danger-section">
+        <div class="section-title" style="color: var(--danger-red);">Danger Zone</div>
+        <div class="danger-card">
+            <h3>Reset Platform Data</h3>
+            <p>⚠️ Warning: These actions are irreversible. All selected data will be permanently deleted from the database.</p>
+            
+            <button class="btn-danger-outline" onclick="resetCollection('deposits')">Erase All Deposits History</button>
+            <div style="height: 10px;"></div>
+            <button class="btn-danger-outline" onclick="resetCollection('withdrawals')">Erase All Withdrawals History</button>
+            <div style="height: 10px;"></div>
+            <button class="btn-danger-outline" onclick="resetCollection('investments')">Erase All Investments</button>
+            <div style="height: 10px;"></div>
+            <button class="btn-danger" onclick="factoryReset()">FACTORY RESET (Wipe All Users & Data)</button>
+        </div>
+    </section>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="admin.html" class="nav-item active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            Dash
+        </a>
+        <a href="admin-deposits.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+            Deps
+        </a>
+        <a href="admin-withdrawals.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Wds
+        </a>
+        <a href="admin-users.html" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            Users
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+            authDomain: "quilox-59463.firebaseapp.com",
+            projectId: "quilox-59463",
+            storageBucket: "quilox-59463.firebasestorage.app",
+            messagingSenderId: "602079101577",
+            appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-left', showConfirmButton: false, timer: 3500, timerProgressBar: true,
+            customClass: { popup: 'swal-custom' }
+        });
+
+        let currentAdminUid = null;
+
+        // Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    currentAdminUid = user.uid;
+                    document.getElementById('adminPhone').innerText = userDoc.data().phone;
+                    loadDashboardData();
+                } else {
+                    window.location.href = 'admin-login.html';
+                }
+            } else {
+                window.location.href = 'admin-login.html';
+            }
+        });
+
+        window.adminLogout = function() {
+            signOut(auth).then(() => {
+                window.location.href = 'admin-login.html';
+            });
+        };
+
+        async function loadDashboardData() {
+            // 1. Total Users
+            const usersSnap = await getDocs(collection(db, "users"));
+            document.getElementById('totalUsers').innerText = usersSnap.size;
+
+            // 2. Active Investments
+            const invQuery = query(collection(db, "investments"), where("status", "==", "active"));
+            const invSnap = await getDocs(invQuery);
+            document.getElementById('totalInvestments').innerText = invSnap.size;
+
+            // 3. Deposits & Withdrawals (Approved Only)
+            const depSnap = await getDocs(collection(db, "deposits"));
+            let usdDep = 0; let ngnDep = 0;
+            depSnap.forEach(d => {
+                if (d.data().status === 'approved') {
+                    if (d.data().currency === 'USD') usdDep += d.data().amount;
+                    else ngnDep += d.data().amount;
+                }
+            });
+            document.getElementById('totalDeposits').innerText = `$${usdDep.toFixed(0)} / ₦${ngnDep.toLocaleString()}`;
+
+            const wdSnap = await getDocs(collection(db, "withdrawals"));
+            let usdWd = 0; let ngnWd = 0;
+            wdSnap.forEach(d => {
+                if (d.data().status === 'approved') {
+                    if (d.data().currency === 'USD') usdWd += d.data().amount;
+                    else ngnWd += d.data().amount;
+                }
+            });
+            document.getElementById('totalWithdrawals').innerText = `$${usdWd.toFixed(0)} / ₦${ngnWd.toLocaleString()}`;
+
+            // 4. Pending Counts
+            let pendingDeps = 0; let pendingWds = 0;
+            depSnap.forEach(d => { if (d.data().status === 'pending') pendingDeps++; });
+            wdSnap.forEach(d => { if (d.data().status === 'pending') pendingWds++; });
+            
+            document.getElementById('pendingDeposits').innerText = pendingDeps;
+            document.getElementById('pendingWithdrawals').innerText = pendingWds;
+
+            // 5. Recent Activity (Fetch last 5 actions)
+            renderActivity(depSnap, wdSnap, usersSnap);
+        }
+
+        function renderActivity(depSnap, wdSnap, usersSnap) {
+            let activities = [];
+            
+            depSnap.forEach(d => activities.push({ type: 'deposit', data: d.data(), time: d.data().createdAt?.toMillis() || 0 }));
+            wdSnap.forEach(d => activities.push({ type: 'withdrawal', data: d.data(), time: d.data().createdAt?.toMillis() || 0 }));
+            usersSnap.forEach(d => activities.push({ type: 'signup', data: d.data(), time: d.data().createdAt?.toMillis() || 0 }));
+
+            activities.sort((a, b) => b.time - a.time);
+            const recent = activities.slice(0, 5);
+
+            const feed = document.getElementById('activityFeed');
+            if (recent.length === 0) {
+                feed.innerHTML = `<div class="activity-item">No activity yet.</div>`;
+                return;
+            }
+
+            feed.innerHTML = '';
+            recent.forEach(act => {
+                const el = document.createElement('div');
+                el.className = 'activity-item';
+                if (act.type === 'deposit') {
+                    el.innerHTML = `💰 <strong>${act.data.phone}</strong> requested a ${act.data.currency} deposit of <strong>${act.data.currency === 'USD' ? '$' : '₦'}${act.data.amount.toLocaleString()}</strong>`;
+                } else if (act.type === 'withdrawal') {
+                    el.innerHTML = `💸 <strong>${act.data.phone}</strong> requested a ${act.data.currency} withdrawal of <strong>${act.data.currency === 'USD' ? '$' : '₦'}${act.data.amount.toLocaleString()}</strong>`;
+                } else {
+                    el.innerHTML = `👤 New user <strong>${act.data.phone}</strong> signed up`;
+                }
+                feed.appendChild(el);
+            });
+        }
+
+        // --- DANGER ZONE LOGIC ---
+
+        window.resetCollection = async function(collectionName) {
+            const confirm = await Swal.fire({
+                title: 'Are you sure?',
+                text: `This will permanently delete ALL documents in the "${collectionName}" collection.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Erase Data'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const snap = await getDocs(collection(db, collectionName));
+                    const batch = writeBatch(db);
+                    snap.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    
+                    Toast.fire({ icon: 'success', title: `All ${collectionName} erased!` });
+                    setTimeout(() => window.location.reload(), 1500);
+                } catch (error) {
+                    console.error(error);
+                    Toast.fire({ icon: 'error', title: 'Failed to erase data' });
+                }
+            }
+        };
+
+        window.factoryReset = async function() {
+            const confirm = await Swal.fire({
+                title: 'FACTORY RESET',
+                text: "WARNING: This will delete ALL users (except you), all deposits, all withdrawals, and all investments. This cannot be undone!",
+                icon: 'error',
+                input: 'text',
+                inputPlaceholder: 'Type "RESET" to confirm',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Permanently Wipe Platform',
+                preConfirm: (text) => {
+                    if (text !== 'RESET') {
+                        Swal.showValidationMessage('You must type RESET exactly');
+                    }
+                    return text;
+                }
+            });
+
+            if (confirm.isConfirmed && confirm.value === 'RESET') {
+                try {
+                    Swal.fire({ title: 'Wiping Platform...', text: 'Please wait, deleting data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+                    // Delete all deposits
+                    const depSnap = await getDocs(collection(db, "deposits"));
+                    let batch = writeBatch(db);
+                    depSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+
+                    // Delete all withdrawals
+                    const wdSnap = await getDocs(collection(db, "withdrawals"));
+                    batch = writeBatch(db);
+                    wdSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+
+                    // Delete all investments
+                    const invSnap = await getDocs(collection(db, "investments"));
+                    batch = writeBatch(db);
+                    invSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+
+                    // Delete all users (except current admin)
+                    const usersSnap = await getDocs(collection(db, "users"));
+                    batch = writeBatch(db);
+                    usersSnap.forEach(doc => {
+                        if (doc.id !== currentAdminUid) {
+                            batch.delete(doc.ref);
+                        }
+                    });
+                    await batch.commit();
+
+                    Swal.fire({ icon: 'success', title: 'Factory Reset Complete', timer: 2000, showConfirmButton: false }).then(() => {
+                        window.location.reload();
+                    });
+
+                } catch (error) {
+                    console.error(error);
+                    Swal.close();
+                    Toast.fire({ icon: 'error', title: 'Reset failed. Try again.' });
+                }
+            }
+        };
+    </script>
+</body>
+</html>
