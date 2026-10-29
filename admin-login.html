@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quilox - Admin Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{--g:#1eb852;--gd:#159b42;--tx:#1a1a1a;--mu:#6b7280;--navy:#0f172a;--w:#fff;--red:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif;border-radius:0}
+body{background:#f1f5f9;color:var(--tx);min-height:100vh;display:flex;flex-direction:column}
+
+/* Header (square) */
+.header-section{background:var(--navy);padding:50px 20px 50px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:4px solid var(--g)}
+.logo-container{background:var(--w);width:90px;height:90px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,.3);margin-bottom:15px}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--g);font-style:italic;letter-spacing:-.5px}
+.tagline{color:#e2e8f0;font-size:16px;font-weight:600;letter-spacing:1px}
+
+/* Form */
+.form-section{flex:1;padding:40px 24px;max-width:450px;margin:0 auto;width:100%}
+.form-header{text-align:center;margin-bottom:35px}
+.form-header h1{font-size:26px;font-weight:800;margin-bottom:5px;color:var(--navy)}
+.form-header p{color:var(--mu);font-size:14px}
+.input-group{margin-bottom:22px}
+.input-group label{display:block;color:var(--navy);font-size:13px;font-weight:700;margin-bottom:8px}
+.input-wrapper{display:flex;align-items:center;border:1px solid #cbd5e1;border-bottom:2px solid #cbd5e1;background:var(--w);padding:12px;transition:border-color .3s}
+.input-wrapper:focus-within{border-color:var(--g)}
+.prefix{font-weight:800;font-size:16px;margin-right:10px}
+.input-wrapper input{border:none;outline:none;width:100%;font-size:16px;color:var(--tx);background:transparent}
+.input-wrapper input::placeholder{color:#94a3b8}
+.toggle-password{cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center}
+.toggle-password svg{width:20px;height:20px}
+.btn-submit{width:100%;background:var(--g);color:#fff;border:none;padding:16px;font-size:16px;font-weight:700;margin-top:10px;cursor:pointer;transition:background .3s,transform .1s;box-shadow:0 4px 15px rgba(30,184,82,.3)}
+.btn-submit:active{transform:scale(.98);background:var(--gd)}
+.btn-submit.loading{opacity:.7;pointer-events:none}
+.back-link{text-align:center;margin-top:30px;font-size:14px;color:var(--mu)}
+.back-link a{color:var(--navy);font-weight:700;text-decoration:none;margin-left:5px}
+
+/* SweetAlert: small square toast, top-left */
+.swal2-container{z-index:99999!important}
+.swal2-container.swal2-top-start{top:10px!important;left:10px!important;right:auto!important;bottom:auto!important;padding:0!important;width:auto!important;max-width:calc(100vw - 20px)!important}
+.swal2-popup.swal-custom{width:auto!important;max-width:min(300px,calc(100vw - 20px))!important;padding:8px 12px!important;margin:0!important;border-radius:0!important;border-left:4px solid var(--g)!important;box-shadow:0 4px 12px rgba(0,0,0,.15)!important;display:flex!important;align-items:center!important;grid-template-columns:none!important}
+.swal-custom.swal2-icon-error{border-left-color:var(--red)!important}
+.swal-custom .swal2-title{font-size:13px!important;line-height:1.3!important;font-weight:700!important;margin:0!important;padding:0!important;text-align:left!important}
+.swal-custom .swal2-icon{margin:0 10px 0 0!important;width:22px!important;min-width:22px!important;height:22px!important;border-width:2px!important;transform:scale(.85)}
+.swal-custom .swal2-timer-progress-bar{background:var(--g)!important}
+.swal-custom.swal2-icon-error .swal2-timer-progress-bar{background:var(--red)!important}
+</style>
+</head>
+<body>
+
+<header class="header-section">
+  <div class="logo-container"><span class="logo-text">Quilox</span></div>
+  <p class="tagline">ADMIN PORTAL</p>
+</header>
+
+<main class="form-section">
+  <div class="form-header"><h1>Admin Login</h1><p>Restricted access only</p></div>
+
+  <form id="adminLoginForm">
+    <div class="input-group">
+      <label>Admin Phone Number</label>
+      <div class="input-wrapper">
+        <span class="prefix" id="countryCode">+234</span>
+        <input type="tel" id="phone" placeholder="9XX XXX XXXX" required autocomplete="tel">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Password</label>
+      <div class="input-wrapper">
+        <input type="password" id="password" placeholder="Enter admin password" required autocomplete="current-password">
+        <span class="toggle-password" onclick="togglePassword('password', this)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">Login to Dashboard</button>
+  </form>
+
+  <div class="back-link">Are you a user? <a href="login.html">Go to User Login</a></div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+  authDomain: "quilox-59463.firebaseapp.com",
+  projectId: "quilox-59463",
+  storageBucket: "quilox-59463.firebasestorage.app",
+  messagingSenderId: "602079101577",
+  appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+});
+const auth = getAuth(app), db = getFirestore(app);
+
+const Toast = Swal.mixin({ toast: true, position: 'top-start', showConfirmButton: false, timer: 3500, timerProgressBar: true, width: 'auto', customClass: { popup: 'swal-custom' } });
+
+window.togglePassword = (id, icon) => {
+  const input = document.getElementById(id), show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  icon.style.color = show ? 'var(--g)' : '#94a3b8';
+};
+
+const phoneInput = document.getElementById('phone'), countryCodeEl = document.getElementById('countryCode'), btn = document.getElementById('submitBtn');
+phoneInput.addEventListener('input', e => {
+  const v = e.target.value;
+  if (v.startsWith('0')) countryCodeEl.innerText = '+234';
+  else if (v.length > 0) countryCodeEl.innerText = '+1';
+});
+
+const reset = () => { btn.classList.remove('loading'); btn.innerText = 'Login to Dashboard'; };
+
+document.getElementById('adminLoginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const cleanPhone = phoneInput.value.trim().replace(/\s+/g, '');
+  const password = document.getElementById('password').value;
+  const authEmail = `${cleanPhone}@quilox.com`;
+
+  try {
+    btn.classList.add('loading'); btn.innerText = 'Verifying Admin...';
+
+    // 1. Sign in
+    const { user } = await signInWithEmailAndPassword(auth, authEmail, password);
+
+    // 2. Check the admin role on the user record
+    let snap;
+    try { snap = await getDoc(doc(db, 'users', user.uid)); }
+    catch (err) {
+      console.error(err);
+      await signOut(auth); reset();
+      return Toast.fire({ icon: 'error', title: 'Could not verify admin access. Try again.' });
+    }
+
+    if (snap.exists() && snap.data().role === 'admin') {
+      Toast.fire({ icon: 'success', title: 'Access granted. Welcome, admin!', timer: 1500 });
+      setTimeout(() => (window.location.href = 'admin.html'), 1500);
+    } else {
+      await signOut(auth); reset();
+      Toast.fire({ icon: 'error', title: snap.exists() ? 'Access denied. You are not an admin.' : 'User record not found.' });
+    }
+  } catch (error) {
+    console.error('Admin Login Error:', error);
+    reset();
+    Toast.fire({ icon: 'error', title: error.code === 'auth/too-many-requests' ? 'Too many failed attempts. Try again later.' : 'Invalid credentials.' });
+  }
+});
+</script>
+</body>
+</html>
