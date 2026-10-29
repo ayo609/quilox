@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quilox Admin - Manage Users</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{--g:#1eb852;--gd:#159b42;--tx:#1a1a1a;--mu:#6b7280;--bd:#e5e7eb;--bg:#f1f5f9;--w:#fff;--sh:0 4px 15px rgba(0,0,0,.05);--red:#ef4444;--amber:#f59e0b;--navy:#0f172a}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif;border-radius:0}
+body{background:var(--bg);color:var(--tx);padding-bottom:90px}
+
+.top-header{background:var(--navy);padding:20px;color:#fff;display:flex;align-items:center;gap:15px;border-bottom:4px solid var(--g)}
+.back-btn{background:rgba(255,255,255,.1);border:none;color:#fff;width:36px;height:36px;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.top-header h1{font-size:18px;font-weight:700;flex:1}
+.count-pill{font-size:12px;font-weight:700;background:rgba(255,255,255,.12);padding:5px 10px;font-family:'DM Mono',monospace}
+
+.search-section{padding:20px 20px 0}
+.search-box{display:flex;background:var(--w);padding:5px 15px;box-shadow:var(--sh);margin-bottom:15px;align-items:center;border:1px solid var(--bd)}
+.search-box input{flex:1;border:none;outline:none;padding:10px;font-size:14px;background:transparent;min-width:0}
+.filter-tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.filter-btn{padding:9px 16px;border:1px solid var(--bd);background:var(--w);font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;white-space:nowrap}
+.filter-btn.active{background:var(--g);color:#fff;border-color:var(--g)}
+
+.users-container{padding:0 20px}
+.user-card{background:var(--w);padding:15px;box-shadow:var(--sh);margin-bottom:12px;cursor:pointer;border:1px solid var(--bd);border-left:4px solid var(--g)}
+.user-card.banned{border-left-color:var(--red)}.user-card.admin{border-left-color:var(--amber)}
+.user-card:active{border-color:var(--g)}
+.uc-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;border-bottom:1px dashed var(--bd);padding-bottom:10px}
+.uc-info{min-width:0}
+.uc-info h4{font-size:15px;font-weight:800;display:flex;align-items:center;gap:6px;flex-wrap:wrap;overflow-wrap:anywhere}
+.uc-info p{font-size:12px;color:var(--mu);margin-top:3px;font-family:'DM Mono',monospace}
+.badge{font-size:10px;font-weight:800;padding:3px 7px;text-transform:uppercase}
+.badge-admin{background:#fef3c7;color:#d97706}.badge-banned{background:#fef2f2;color:var(--red)}.badge-active{background:#ecfdf5;color:var(--g)}
+.uc-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.uc-stat span{display:block;color:var(--mu);font-size:10px;text-transform:uppercase;font-weight:700}
+.uc-stat strong{font-family:'DM Mono',monospace;font-size:12px;overflow-wrap:anywhere}
+.loader{display:flex;justify-content:center;text-align:center;padding:20px;color:var(--mu);font-size:13px}
+
+/* Profile modal */
+.modal-header{background:var(--navy);color:#fff;padding:20px;text-align:left;border-bottom:3px solid var(--g)}
+.modal-header h2{font-size:19px;font-weight:800;margin-bottom:5px;overflow-wrap:anywhere}
+.modal-header p{font-size:11px;color:#94a3b8;font-family:'DM Mono',monospace;line-height:1.5}
+.modal-body{padding:18px;max-height:62vh;overflow-y:auto;text-align:left}
+.wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.wallet-box{background:var(--bg);padding:10px;border-left:3px solid var(--g);min-width:0}
+.wallet-box.ngn{border-left-color:#2563eb}
+.wallet-box h5{font-size:10px;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:4px}
+.wallet-box p{font-size:13px;font-weight:800;font-family:'DM Mono',monospace;overflow-wrap:anywhere}
+.info-row{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:13px}
+.info-row span{color:var(--mu);font-weight:600}.info-row strong{font-family:'DM Mono',monospace;text-align:right}
+.history-tabs{display:flex;border-bottom:2px solid var(--bd);margin:16px 0 12px;gap:14px;overflow-x:auto}
+.h-tab{padding:10px 4px;font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-2px}
+.h-tab.active{color:var(--g);border-bottom-color:var(--g)}
+.h-content{display:none}.h-content.active{display:block}
+.hist-item{padding:10px 0;border-bottom:1px dashed var(--bd);font-size:12px}
+.hist-item:last-child{border-bottom:none}
+.hist-top{display:flex;justify-content:space-between;gap:8px;font-weight:700;margin-bottom:4px}
+.hist-bottom{color:var(--mu);font-size:11px;display:flex;justify-content:space-between;gap:8px}
+.admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;border-top:1px solid var(--bd);padding-top:18px}
+.act-btn{padding:12px 6px;font-size:12px;font-weight:700;cursor:pointer;border:none}
+.btn-credit{background:var(--g);color:#fff}.btn-debit{background:var(--amber);color:#fff}
+.btn-ban{background:#fef2f2;color:var(--red);border:1px solid #fecaca}
+.btn-admin{background:#f5f3ff;color:#8b5cf6;border:1px solid #ddd6fe}
+.btn-delete{background:var(--red);color:#fff;grid-column:span 2}
+
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:var(--w);display:flex;justify-content:space-around;padding:10px 0 15px;box-shadow:0 -2px 15px rgba(0,0,0,.05);border-top:1px solid var(--bd);z-index:1000}
+.nav-item{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:var(--mu);font-size:10px;font-weight:700}
+.nav-item.active{color:var(--g)}
+.nav-item svg{width:20px;height:20px;margin-bottom:4px}
+
+/* SweetAlert: standard popups, square and phone-sized */
+.swal2-container{z-index:99999!important}
+.swal2-popup{border-radius:0!important;max-width:calc(100vw - 24px)!important;font-family:'Manrope',sans-serif!important}
+.swal2-popup:not(.swal-custom){width:320px!important;padding:20px 16px 16px!important}
+.swal2-popup:not(.swal-custom) .swal2-title{font-size:19px;font-weight:800}
+.swal2-popup:not(.swal-custom) .swal2-html-container{font-size:14px;line-height:1.7;margin:8px 0 0}
+.swal2-popup.profile-modal{width:min(500px,calc(100vw - 24px))!important;padding:0!important;overflow:hidden!important}
+.profile-modal .swal2-html-container{margin:0!important;padding:0!important;overflow:visible!important;font-size:13px!important}
+.profile-modal .swal2-close{color:#fff;z-index:5}
+.swal2-styled{border-radius:0!important;font-size:14px!important;font-weight:700!important}
+.swal2-input,.swal2-select{border-radius:0!important;width:100%!important;margin:10px 0 0!important;font-size:14px!important;height:44px!important;max-width:100%!important}
+.swal2-validation-message{border-radius:0!important;font-size:12px!important}
+.swal2-close{box-shadow:none!important}
+.swal2-container.swal2-top-start{top:10px!important;left:10px!important;right:auto!important;bottom:auto!important;padding:0!important;width:auto!important;max-width:calc(100vw - 20px)!important}
+.swal2-popup.swal-custom{width:auto!important;max-width:min(300px,calc(100vw - 20px))!important;padding:8px 12px!important;margin:0!important;border-left:4px solid var(--g)!important;box-shadow:0 4px 12px rgba(0,0,0,.15)!important;display:flex!important;align-items:center!important;grid-template-columns:none!important}
+.swal-custom.swal2-icon-error{border-left-color:var(--red)!important}
+.swal-custom .swal2-title{font-size:13px!important;line-height:1.3!important;font-weight:700!important;margin:0!important;padding:0!important;text-align:left!important}
+.swal-custom .swal2-icon{margin:0 10px 0 0!important;width:22px!important;min-width:22px!important;height:22px!important;border-width:2px!important;transform:scale(.85)}
+.swal-custom .swal2-timer-progress-bar{background:var(--g)!important}
+</style>
+</head>
+<body>
+
+<header class="top-header">
+  <a href="admin.html" class="back-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></a>
+  <h1>Manage Users</h1>
+  <span class="count-pill" id="countPill">0</span>
+</header>
+
+<section class="search-section">
+  <div class="search-box">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#6b7280"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <input type="text" id="searchInput" placeholder="Search by phone or referral code..." oninput="filterUsers()">
+  </div>
+  <div class="filter-tabs">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All Users</button>
+    <button class="filter-btn" onclick="setFilter('investors',this)">Active Investors</button>
+    <button class="filter-btn" onclick="setFilter('banned',this)">Banned</button>
+    <button class="filter-btn" onclick="setFilter('admins',this)">Admins</button>
+  </div>
+</section>
+
+<section class="users-container" id="usersContainer"><div class="loader">Loading users...</div></section>
+
+<nav class="bottom-nav">
+  <a href="admin.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dash</a>
+  <a href="admin-deposits.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Deps</a>
+  <a href="admin-withdrawals.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Wds</a>
+  <a href="admin-users.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Users</a>
+</nav>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, onSnapshot, updateDoc, deleteDoc, addDoc, runTransaction, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+  authDomain: "quilox-59463.firebaseapp.com",
+  projectId: "quilox-59463",
+  storageBucket: "quilox-59463.firebasestorage.app",
+  messagingSenderId: "602079101577",
+  appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const r2 = n => Math.round(n * 100) / 100;
+const fmt = (n, c) => (c === 'NGN' ? '₦' : '$') + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dstr = t => (t?.toDate ? t.toDate().toLocaleDateString() : '');
+const ms = t => t?.toMillis?.() || 0;
+
+const Toast = Swal.mixin({ toast: true, position: 'top-start', showConfirmButton: false, timer: 3500, timerProgressBar: true, width: 'auto', customClass: { popup: 'swal-custom' } });
+
+let users = [], filter = 'all', term = '', adminUid = null, adminPhone = '';
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return (window.location.href = 'admin-login.html');
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (!(snap.exists() && snap.data().role === 'admin')) return (window.location.href = 'admin-login.html');
+    adminUid = user.uid; adminPhone = snap.data().phone || '';
+    onSnapshot(collection(db, 'users'), s => {
+      users = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+      render();
+    }, e => { console.error(e); $('usersContainer').innerHTML = '<div class="loader">Could not load users. Check your rules.</div>'; });
+  } catch (e) { console.error(e); Toast.fire({ icon: 'error', title: 'Could not verify admin access' }); }
+});
+
+window.setFilter = (f, btn) => { filter = f; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); };
+window.filterUsers = () => { term = $('searchInput').value.trim().toLowerCase(); render(); };
+
+function render() {
+  const list = users.filter(u => {
+    if (term && !(String(u.phone || '').toLowerCase().includes(term) || String(u.referralCode || '').toLowerCase().includes(term))) return false;
+    if (filter === 'investors') return u.hasInvested === true;
+    if (filter === 'banned') return u.status === 'banned';
+    if (filter === 'admins') return u.role === 'admin';
+    return true;
+  });
+  $('countPill').innerText = `${list.length}/${users.length}`;
+  const box = $('usersContainer');
+  if (!list.length) return (box.innerHTML = '<div class="loader">No users found.</div>');
+  box.innerHTML = list.map(u => {
+    const banned = u.status === 'banned';
+    return `<div class="user-card${banned ? ' banned' : u.role === 'admin' ? ' admin' : ''}" data-id="${esc(u.id)}">
+      <div class="uc-header">
+        <div class="uc-info"><h4>${esc(u.phone)} ${u.role === 'admin' ? '<span class="badge badge-admin">Admin</span>' : ''} ${banned ? '<span class="badge badge-banned">Banned</span>' : '<span class="badge badge-active">Active</span>'}</h4><p>${esc(u.referralCode)}</p></div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#6b7280"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="uc-stats">
+        <div class="uc-stat"><span>Deposit Balance</span><strong>${fmt(u.depositUSD, 'USD')}<br>${fmt(u.depositNGN, 'NGN')}</strong></div>
+        <div class="uc-stat"><span>Invested / First Plan</span><strong>${u.hasInvested ? 'Yes' : 'No'} · ${esc(u.firstPlanName || 'N/A')}</strong></div>
+      </div></div>`;
+  }).join('');
+}
+$('usersContainer').addEventListener('click', e => { const c = e.target.closest('.user-card'); if (c) openProfile(c.dataset.id); });
+
+/* ---------- Profile modal ---------- */
+async function openProfile(id) {
+  Swal.fire({ title: 'Loading user...', showConfirmButton: false, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  let u, deposits, withdrawals, investments, refs;
+  try {
+    const snap = await getDoc(doc(db, 'users', id));
+    if (!snap.exists()) { Swal.close(); return Toast.fire({ icon: 'error', title: 'User not found' }); }
+    u = { id, ...snap.data() };
+    const by = (c, f) => getDocs(query(collection(db, c), where(f, '==', id)));
+    const [dep, wd, inv, l1, l2, l3] = await Promise.all([by('deposits', 'userId'), by('withdrawals', 'userId'), by('investments', 'userId'), by('users', 'referredBy'), by('users', 'referredByL2'), by('users', 'referredByL3')]);
+    const sort = s => s.docs.map(d => d.data()).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+    deposits = sort(dep); withdrawals = sort(wd); investments = sort(inv);
+    refs = [...sort(l1).map(r => ({ ...r, lvl: 1 })), ...sort(l2).map(r => ({ ...r, lvl: 2 })), ...sort(l3).map(r => ({ ...r, lvl: 3 }))];
+  } catch (e) { console.error(e); Swal.close(); return Toast.fire({ icon: 'error', title: 'Could not load user details' }); }
+
+  const col = s => (s === 'approved' || s === 'active' ? 'var(--g)' : s === 'rejected' ? 'var(--red)' : s === 'pending' ? 'var(--amber)' : 'var(--mu)');
+  const empty = t => `<div class="loader" style="font-size:12px">${t}</div>`;
+  const depHtml = deposits.length ? deposits.map(d => `<div class="hist-item"><div class="hist-top"><span>${fmt(d.amount, d.currency)}</span><span style="color:${col(d.status)}">${esc(String(d.status).toUpperCase())}</span></div><div class="hist-bottom"><span>${dstr(d.createdAt)}</span></div></div>`).join('') : empty('No deposits yet.');
+  const wdHtml = withdrawals.length ? withdrawals.map(w => `<div class="hist-item"><div class="hist-top"><span>${fmt(w.amount, w.currency)}</span><span style="color:${col(w.status)}">${esc(String(w.status).toUpperCase())}</span></div><div class="hist-bottom"><span>${dstr(w.createdAt)}</span><span>Fee: ${fmt(w.fee, w.currency)}</span></div></div>`).join('') : empty('No withdrawals yet.');
+  const invHtml = investments.length ? investments.map(i => `<div class="hist-item"><div class="hist-top"><span>${esc(i.planName)}</span><span>${fmt(i.amount, i.currency)}</span></div><div class="hist-bottom"><span>${i.daysPaid || 0}/25 Days Paid</span><span style="color:${col(i.status)}">${esc(String(i.status).toUpperCase())}</span></div></div>`).join('') : empty('No investments yet.');
+  const refHtml = refs.length ? refs.map(r => `<div class="hist-item"><div class="hist-top"><span>${esc(r.phone)}</span><span>Level ${r.lvl}</span></div><div class="hist-bottom"><span>${dstr(r.createdAt)}</span></div></div>`).join('') : empty('No referrals yet.');
+  const n = l => refs.filter(r => r.lvl === l).length;
+  const banned = u.status === 'banned', isAdmin = u.role === 'admin';
+
+  await Swal.fire({
+    html: `<div class="modal-header"><h2>${esc(u.phone)}</h2><p>REF: ${esc(u.referralCode)} | Joined: ${dstr(u.createdAt) || 'N/A'}</p></div>
+    <div class="modal-body">
+      <div class="wallet-grid">
+        <div class="wallet-box"><h5>USD Deposit</h5><p>${fmt(u.depositUSD, 'USD')}</p></div>
+        <div class="wallet-box ngn"><h5>NGN Deposit</h5><p>${fmt(u.depositNGN, 'NGN')}</p></div>
+        <div class="wallet-box"><h5>USD Withdraw</h5><p>${fmt(u.withdrawalUSD, 'USD')}</p></div>
+        <div class="wallet-box ngn"><h5>NGN Withdraw</h5><p>${fmt(u.withdrawalNGN, 'NGN')}</p></div>
+      </div>
+      <div class="info-row"><span>Referrals (L1 / L2 / L3)</span><strong>${n(1)} / ${n(2)} / ${n(3)}</strong></div>
+      <div class="info-row"><span>Has Invested</span><strong>${u.hasInvested ? '✅ Yes' : '❌ No'}</strong></div>
+      <div class="info-row"><span>First Plan</span><strong>${esc(u.firstPlanName || 'N/A')}</strong></div>
+      <div class="history-tabs">
+        <div class="h-tab active" data-tab="dep">Deposits</div><div class="h-tab" data-tab="wd">Withdrawals</div>
+        <div class="h-tab" data-tab="inv">Investments</div><div class="h-tab" data-tab="ref">Referrals</div>
+      </div>
+      <div class="h-content active" id="tab-dep">${depHtml}</div><div class="h-content" id="tab-wd">${wdHtml}</div>
+      <div class="h-content" id="tab-inv">${invHtml}</div><div class="h-content" id="tab-ref">${refHtml}</div>
+      <div class="admin-actions">
+        <button class="act-btn btn-credit" data-act="credit">💰 Credit</button>
+        <button class="act-btn btn-debit" data-act="debit">💸 Debit</button>
+        <button class="act-btn btn-ban" data-act="ban">${banned ? '✅ Unban' : '🚫 Ban'}</button>
+        <button class="act-btn btn-admin" data-act="admin">${isAdmin ? '👤 Remove Admin' : '👑 Make Admin'}</button>
+        <button class="act-btn btn-delete" data-act="delete">🗑️ Delete User</button>
+      </div>
+    </div>`,
+    showConfirmButton: false, showCloseButton: true, scrollbarPadding: false, heightAuto: false,
+    customClass: { popup: 'profile-modal' },
+    didOpen: p => {
+      p.querySelectorAll('.h-tab').forEach(t => (t.onclick = () => {
+        p.querySelectorAll('.h-tab,.h-content').forEach(e => e.classList.remove('active'));
+        t.classList.add('active'); p.querySelector('#tab-' + t.dataset.tab).classList.add('active');
+      }));
+      p.querySelectorAll('[data-act]').forEach(b => (b.onclick = async () => {
+        const act = b.dataset.act;
+        const changed = act === 'credit' || act === 'debit' ? await adjust(u, act) : act === 'ban' ? await toggleBan(u) : act === 'admin' ? await toggleAdmin(u) : await removeUser(u);
+        if (act !== 'delete' || !changed) openProfile(id);   // back to the (refreshed) profile
+        else Swal.close();
+      }));
+    }
+  });
+}
+
+/* ---------- Actions (each returns true if something changed) ---------- */
+async function adjust(u, type) {
+  const credit = type === 'credit';
+  const res = await Swal.fire({
+    title: `${credit ? 'Credit' : 'Debit'} User`,
+    html: `<select id="adjWallet" class="swal2-select">
+        <option value="depositUSD">USD Deposit Wallet</option><option value="depositNGN">NGN Deposit Wallet</option>
+        <option value="withdrawalUSD">USD Withdrawal Wallet</option><option value="withdrawalNGN">NGN Withdrawal Wallet</option></select>
+      <input id="adjAmount" class="swal2-input" type="number" inputmode="decimal" placeholder="Amount">
+      <input id="adjReason" class="swal2-input" type="text" placeholder="Reason (required)">`,
+    focusConfirm: false, showCloseButton: true, showCancelButton: true, confirmButtonText: credit ? 'Credit' : 'Debit', cancelButtonText: 'Back',
+    confirmButtonColor: credit ? '#1eb852' : '#f59e0b', cancelButtonColor: '#6b7280', reverseButtons: true,
+    showLoaderOnConfirm: true, allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      const wallet = $('adjWallet').value, amount = r2(parseFloat($('adjAmount').value)), reason = $('adjReason').value.trim();
+      if (!(amount > 0) || !reason) { Swal.showValidationMessage('Enter a valid amount and a reason'); return false; }
+      try {
+        const ref = doc(db, 'users', u.id);
+        await runTransaction(db, async tx => {
+          const d = (await tx.get(ref)).data();
+          if (!credit && Number(d[wallet] || 0) + 1e-9 < amount) throw new Error('INSUFFICIENT');
+          tx.update(ref, { [wallet]: increment(credit ? amount : -amount) });
+        });
+        // Audit trail (non-fatal if your rules don't allow it)
+        try { await addDoc(collection(db, 'adminLogs'), { adminId: adminUid, adminPhone, userId: u.id, userPhone: u.phone, action: type, wallet, amount, reason, createdAt: serverTimestamp() }); } catch (e) { console.warn('Audit log skipped:', e.code); }
+        return { wallet, amount };
+      } catch (e) {
+        console.error(e);
+        Swal.showValidationMessage(e.message === 'INSUFFICIENT' ? 'User does not have that much in this wallet' : 'Failed to update wallet. Try again.');
+        return false;
+      }
+    }
+  });
+  if (res.isConfirmed) { Toast.fire({ icon: 'success', title: `Wallet ${credit ? 'credited' : 'debited'} successfully` }); return true; }
+  return false;
+}
+
+async function confirmThen(opts, work) {
+  const res = await Swal.fire({
+    icon: opts.icon || 'warning', title: opts.title, html: opts.html, showCloseButton: true, showCancelButton: true,
+    confirmButtonText: opts.ok, cancelButtonText: 'Cancel', confirmButtonColor: opts.color || '#ef4444', cancelButtonColor: '#6b7280', reverseButtons: true,
+    showLoaderOnConfirm: true, allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => { try { await work(); return true; } catch (e) { console.error(e); Swal.showValidationMessage('Action failed. Check your rules and try again.'); return false; } }
+  });
+  if (res.isConfirmed) { Toast.fire({ icon: 'success', title: opts.done }); return true; }
+  return false;
+}
+
+async function toggleBan(u) {
+  if (u.id === adminUid) { Toast.fire({ icon: 'error', title: "You can't ban your own account" }); return false; }
+  const ban = u.status !== 'banned';
+  return confirmThen({ title: ban ? 'Ban User?' : 'Unban User?', html: `${esc(u.phone)} will ${ban ? 'be suspended and signed out of the dashboard' : 'be able to use their account again'}.`, ok: ban ? 'Yes, Ban' : 'Yes, Unban', color: ban ? '#ef4444' : '#1eb852', done: `User ${ban ? 'banned' : 'unbanned'}` },
+    () => updateDoc(doc(db, 'users', u.id), { status: ban ? 'banned' : 'active' }));
+}
+
+async function toggleAdmin(u) {
+  if (u.id === adminUid) { Toast.fire({ icon: 'error', title: "You can't change your own role" }); return false; }
+  const make = u.role !== 'admin';
+  return confirmThen({ title: make ? 'Make Admin?' : 'Remove Admin?', html: make ? `<b>${esc(u.phone)}</b> will get full admin access, including balances and withdrawals.` : `<b>${esc(u.phone)}</b> will lose admin access.`, ok: make ? 'Yes, Make Admin' : 'Yes, Remove', color: '#8b5cf6', done: `User is now ${make ? 'an admin' : 'a regular user'}` },
+    () => updateDoc(doc(db, 'users', u.id), { role: make ? 'admin' : 'user' }));
+}
+
+async function removeUser(u) {
+  if (u.id === adminUid) { Toast.fire({ icon: 'error', title: "You can't delete your own account" }); return false; }
+  if (u.role === 'admin') { Toast.fire({ icon: 'error', title: 'Remove admin access first' }); return false; }
+  return confirmThen({ icon: 'error', title: 'Delete User?', html: `This permanently deletes the user record of <b>${esc(u.phone)}</b> from Firestore. Their login account is not removed and this <b>cannot be undone</b>!`, ok: 'Yes, Delete Forever', done: 'User deleted' },
+    () => deleteDoc(doc(db, 'users', u.id)));
+}
+</script>
+</body>
+</html>
