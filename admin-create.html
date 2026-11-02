@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quilox - Create Admin Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{--g:#1eb852;--gd:#159b42;--tx:#1a1a1a;--mu:#6b7280;--bd:#e5e7eb;--bg:#f1f5f9;--w:#fff;--red:#ef4444;--navy:#0f172a}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif;border-radius:0}
+body{background:var(--bg);color:var(--tx);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+
+.container{background:var(--w);max-width:420px;width:100%;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.1);border-top:4px solid var(--navy)}
+.container h1{font-size:22px;font-weight:800;margin-bottom:5px;color:var(--navy)}
+.container p{font-size:13px;color:var(--mu);margin-bottom:25px;line-height:1.5}
+
+.input-group{margin-bottom:18px}
+.input-group label{display:block;font-size:12px;font-weight:700;color:var(--mu);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.input-group input{width:100%;padding:12px;border:1px solid var(--bd);font-size:14px;font-family:'DM Mono',monospace;outline:none;transition:.2s}
+.input-group input:focus{border-color:var(--navy)}
+
+.btn{width:100%;padding:14px;border:none;font-weight:800;font-size:14px;cursor:pointer;transition:.2s;text-transform:uppercase;letter-spacing:.5px}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:active{background:#000}
+.btn-outline{background:transparent;color:var(--navy);border:1px solid var(--navy);margin-top:10px}
+.btn-outline:active{background:#f1f5f9}
+
+.secure-note{background:#fef3c7;border-left:4px solid #f59e0b;padding:12px;font-size:11px;color:#92400e;line-height:1.5;margin-top:20px}
+
+/* SweetAlert */
+.swal2-popup{border-radius:0!important;font-family:'Manrope',sans-serif!important;padding:20px 16px!important}
+.swal2-title{font-size:18px!important;font-weight:800!important}
+.swal2-html-container{font-size:13px!important;line-height:1.6!important}
+.swal2-styled{border-radius:0!important;font-weight:700!important;font-size:13px!important}
+.swal2-input{border-radius:0!important;font-family:'DM Mono',monospace!important;font-size:14px!important}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔐 Create Admin Account</h1>
+  <p>This tool creates a new Firebase account and instantly grants it full access to the Admin Panel.</p>
+
+  <div class="input-group">
+    <label>Phone Number</label>
+    <input type="tel" id="phone" placeholder="e.g. 08012345678" autocomplete="off">
+  </div>
+
+  <div class="input-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Min 6 characters" autocomplete="new-password">
+  </div>
+
+  <div class="input-group">
+    <label>Confirm Password</label>
+    <input type="password" id="confirmPassword" placeholder="Repeat password" autocomplete="new-password">
+  </div>
+
+  <button class="btn btn-primary" onclick="createAdmin()">Create Admin Account</button>
+  <button class="btn btn-outline" onclick="promoteExisting()">Promote Existing User</button>
+
+  <div class="secure-note">
+    ⚠️ <strong>Security Note:</strong> Delete this file from your server after creating your admin account. It has unrestricted access to grant admin privileges.
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+  authDomain: "quilox-59463.firebaseapp.com",
+  projectId: "quilox-59463",
+  storageBucket: "quilox-59463.firebasestorage.app",
+  messagingSenderId: "602079101577",
+  appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const $ = id => document.getElementById(id);
+
+// ---- CREATE NEW ADMIN ACCOUNT ----
+window.createAdmin = async () => {
+  const phone = $('phone').value.trim();
+  const password = $('password').value;
+  const confirmPassword = $('confirmPassword').value;
+
+  if (!phone || !password) return Swal.fire({ icon: 'error', title: 'Fill all fields', confirmButtonColor: '#0f172a' });
+  if (password.length < 6) return Swal.fire({ icon: 'error', title: 'Password must be at least 6 characters', confirmButtonColor: '#0f172a' });
+  if (password !== confirmPassword) return Swal.fire({ icon: 'error', title: 'Passwords do not match', confirmButtonColor: '#0f172a' });
+
+  const cleanPhone = phone.replace(/\s+/g, '');
+  const authEmail = `${cleanPhone}@quilox.com`;
+
+  try {
+    Swal.fire({ title: 'Creating Admin...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    // 1. Create User in Firebase Auth
+    const userCred = await createUserWithEmailAndPassword(auth, authEmail, password);
+    const user = userCred.user;
+    await updateProfile(user, { displayName: phone });
+
+    // 2. Generate Referral Code
+    const refCode = "QX" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // 3. Save User Data with role: 'admin'
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      phone: phone,
+      countryCode: "+234",
+      currency: "NGN",
+      referralCode: refCode,
+      referredBy: null,
+      referredByL2: null,
+      referredByL3: null,
+      depositUSD: 0,
+      depositNGN: 0,
+      withdrawalUSD: 0,
+      withdrawalNGN: 0,
+      totalInvested: 0,
+      totalEarned: 0,
+      welcomeBonusClaimed: true,
+      status: 'active',
+      role: 'admin',
+      createdAt: serverTimestamp()
+    });
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Admin Created!',
+      html: `<div style="text-align:left;font-size:13px;line-height:1.8">
+        <p><b>Phone:</b> ${phone}</p>
+        <p><b>Password:</b> ${password}</p>
+        <p><b>Role:</b> admin</p>
+        <hr style="margin:10px 0;border-color:#e5e7eb">
+        <p style="color:#6b7280">Save these credentials. You'll be redirected to the admin login.</p>
+      </div>`,
+      confirmButtonText: 'Go to Admin Login',
+      confirmButtonColor: '#0f172a',
+      allowOutsideClick: false
+    }).then(() => {
+      window.location.href = 'admin-login.html';
+    });
+
+  } catch (error) {
+    console.error(error);
+    let msg = "Something went wrong. Try again.";
+    if (error.code === 'auth/email-already-in-use') msg = "This phone number already has an account. Use 'Promote Existing User' instead.";
+    if (error.code === 'auth/weak-password') msg = "Password is too weak.";
+    Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#0f172a' });
+  }
+};
+
+// ---- PROMOTE EXISTING USER TO ADMIN ----
+window.promoteExisting = async () => {
+  const { value: phone } = await Swal.fire({
+    title: 'Promote Existing User',
+    html: '<p style="font-size:12px;color:#6b7280;margin-bottom:10px">Enter the phone number of an existing user to promote them to admin.</p>',
+    input: 'text',
+    inputPlaceholder: 'e.g. 08012345678',
+    showCancelButton: true,
+    confirmButtonText: 'Find & Promote',
+    confirmButtonColor: '#0f172a',
+    cancelButtonColor: '#6b7280',
+    inputValidator: v => !v ? 'Enter a phone number' : null
+  });
+
+  if (!phone) return;
+  const cleanPhone = phone.replace(/\s+/g, '');
+
+  try {
+    Swal.fire({ title: 'Searching...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    const usersRef = collection(db, "users");
+    const snap = await getDocs(query(usersRef, where("phone", "==", phone)));
+
+    if (snap.empty) {
+      return Swal.fire({ icon: 'error', title: 'User not found', text: 'No account with that phone number exists. Use "Create Admin Account" instead.', confirmButtonColor: '#0f172a' });
+    }
+
+    const userDoc = snap.docs[0];
+    const userData = userDoc.data();
+
+    if (userData.role === 'admin') {
+      return Swal.fire({ icon: 'info', title: 'Already Admin', text: `${phone} is already an admin.`, confirmButtonColor: '#0f172a' });
+    }
+
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Promote to Admin?',
+      html: `This will grant admin access to:<br><b>${phone}</b><br><br>They will be able to access the admin panel.`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Promote',
+      confirmButtonColor: '#0f172a',
+      cancelButtonColor: '#6b7280'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    await updateDoc(doc(db, "users", userDoc.id), { role: 'admin' });
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Promoted Successfully!',
+      html: `<p><b>${phone}</b> is now an admin.</p><p style="font-size:12px;color:#6b7280;margin-top:10px">They can now log in at admin-login.html</p>`,
+      confirmButtonText: 'Done',
+      confirmButtonColor: '#0f172a'
+    });
+
+  } catch (error) {
+    console.error(error);
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to promote user. Try again.', confirmButtonColor: '#0f172a' });
+  }
+};
+</script>
+</body>
+</html>
