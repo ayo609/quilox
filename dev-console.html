@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quilox Dev Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{--bg:#0b1120;--card:#1e293b;--tx:#f8fafc;--mu:#94a3b8;--bd:#334155;--g:#1eb852;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif;border-radius:0}
+body{background:var(--bg);color:var(--tx);padding-bottom:90px;min-height:100vh}
+
+.top-header{background:#000;padding:20px;border-bottom:2px solid var(--red);display:flex;justify-content:space-between;align-items:center}
+.top-header h1{font-size:16px;font-weight:800;color:var(--red);letter-spacing:1px;text-transform:uppercase}
+.top-header p{font-size:11px;color:var(--mu);font-family:'DM Mono',monospace}
+.logout-btn{background:var(--red);color:#fff;border:none;padding:8px 14px;font-weight:700;font-size:12px;cursor:pointer}
+
+/* Leaderboard */
+.leaderboard-section{padding:20px;background:var(--card);border-bottom:1px solid var(--bd)}
+.lb-title{font-size:13px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:15px;display:flex;align-items:center;gap:8px}
+.lb-item{background:#0f172a;padding:12px 15px;border:1px solid var(--bd);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.lb-rank{font-size:16px;font-weight:800;color:var(--amber);width:25px;font-family:'DM Mono',monospace}
+.lb-info{flex:1;margin-left:10px}
+.lb-info h4{font-size:14px;font-family:'DM Mono',monospace;font-weight:700}
+.lb-info p{font-size:11px;color:var(--mu);margin-top:3px}
+.lb-stats{text-align:right}
+.lb-count{font-size:14px;font-weight:800;color:var(--g);font-family:'DM Mono',monospace}
+.lb-bonus{font-size:11px;color:var(--mu);margin-top:2px}
+
+/* Search Section */
+.search-section{padding:20px;background:var(--card);border-bottom:1px solid var(--bd)}
+.search-box{display:flex;gap:10px}
+.search-box input{flex:1;padding:14px;background:#0f172a;border:1px solid var(--bd);color:var(--tx);font-family:'DM Mono',monospace;font-size:14px;outline:none}
+.search-box input:focus{border-color:var(--g)}
+.search-btn{background:var(--g);color:#fff;border:none;padding:0 24px;font-weight:800;font-size:14px;cursor:pointer}
+
+/* User Card */
+.user-view{padding:20px;display:none}
+.user-view.active{display:block}
+.u-card{background:var(--card);padding:20px;border:1px solid var(--bd);border-left:4px solid var(--g);margin-bottom:15px}
+.u-head{display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;border-bottom:1px dashed var(--bd);padding-bottom:15px}
+.u-head h2{font-size:18px;font-family:'DM Mono',monospace;color:var(--tx)}
+.u-head p{font-size:11px;color:var(--mu);margin-top:4px}
+.wallets-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wallet-box{background:#0f172a;padding:12px;border:1px solid var(--bd)}
+.wallet-box h5{font-size:10px;color:var(--mu);text-transform:uppercase;margin-bottom:4px}
+.wallet-box p{font-size:16px;font-family:'DM Mono',monospace;font-weight:800;color:var(--g)}
+
+/* Action Tabs */
+.action-tabs{display:flex;overflow-x:auto;background:#0f172a;border:1px solid var(--bd);margin-bottom:15px}
+.tab{flex:1;min-width:100px;padding:12px 5px;text-align:center;font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.active{color:var(--g);border-bottom-color:var(--g)}
+.tab-pane{display:none;background:var(--card);padding:20px;border:1px solid var(--bd)}
+.tab-pane.active{display:block}
+
+/* Forms */
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:11px;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:5px}
+.form-group input,.form-group select{width:100%;padding:12px;background:#0f172a;border:1px solid var(--bd);color:var(--tx);font-family:'DM Mono',monospace;font-size:14px;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:var(--g)}
+.btn{width:100%;padding:12px;border:none;font-weight:800;font-size:13px;cursor:pointer;transition:.2s;text-transform:uppercase}
+.btn-green{background:var(--g);color:#fff}.btn-green:active{background:#159b42}
+.btn-red{background:var(--red);color:#fff}.btn-red:active{background:#dc2626}
+.btn-amber{background:var(--amber);color:#000}.btn-amber:active{background:#d97706}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:active{background:#2563eb}
+.btn-dark{background:#334155;color:#fff}
+
+/* Transaction List */
+.tx-item{background:#0f172a;padding:12px;border:1px solid var(--bd);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tx-info h4{font-size:13px;font-weight:700}
+.tx-info p{font-size:11px;color:var(--mu);font-family:'DM Mono',monospace}
+.tx-del{background:var(--red);color:#fff;border:none;padding:6px 10px;font-size:10px;font-weight:800;cursor:pointer}
+
+/* SweetAlert Dark */
+.swal2-popup{background:var(--card)!important;color:var(--tx)!important;border-radius:0!important;border:1px solid var(--bd)!important;font-family:'Manrope',sans-serif!important}
+.swal2-title{color:var(--tx)!important;font-size:18px!important}
+.swal2-html-container{color:var(--mu)!important;font-size:13px!important}
+.swal2-input{background:#0f172a!important;color:var(--tx)!important;border:1px solid var(--bd)!important;border-radius:0!important;font-family:'DM Mono',monospace!important}
+.swal2-styled{border-radius:0!important;font-weight:700!important;font-size:13px!important}
+.swal2-validation-message{background:#7f1d1d!important;color:#fca5a5!important;border-radius:0!important}
+.swal2-close{color:var(--mu)!important;box-shadow:none!important}
+.loader{text-align:center;padding:30px;color:var(--mu);font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="top-header">
+  <div>
+    <h1>⚠ Dev Console</h1>
+    <p>Quilox God Mode</p>
+  </div>
+  <button class="logout-btn" onclick="devLogout()">Exit</button>
+</header>
+
+<section class="leaderboard-section">
+  <div class="lb-title">🏆 Top 10 Referrers</div>
+  <div id="leaderboardContainer"><div class="loader">Loading leaderboard...</div></div>
+</section>
+
+<section class="search-section">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Enter phone number or referral code..." autocomplete="off">
+    <button class="search-btn" onclick="searchUser()">Search</button>
+  </div>
+</section>
+
+<section class="user-view" id="userView">
+  <div class="u-card">
+    <div class="u-head">
+      <div>
+        <h2 id="uPhone">Loading...</h2>
+        <p id="uInfo">...</p>
+      </div>
+      <div style="text-align:right">
+        <p style="font-size:10px;color:var(--mu)">UID</p>
+        <p style="font-size:10px;font-family:'DM Mono',monospace;color:var(--g)" id="uUid">...</p>
+      </div>
+    </div>
+    <div class="wallets-grid">
+      <div class="wallet-box"><h5>USD Deposit</h5><p id="wUSDd">$0.00</p></div>
+      <div class="wallet-box"><h5>NGN Deposit</h5><p id="wNGNd">₦0.00</p></div>
+      <div class="wallet-box"><h5>USD Withdraw</h5><p id="wUSDw">$0.00</p></div>
+      <div class="wallet-box"><h5>NGN Withdraw</h5><p id="wNGNw">₦0.00</p></div>
+    </div>
+  </div>
+
+  <div class="action-tabs">
+    <div class="tab active" onclick="switchTab('wallet', this)">💰 Wallets</div>
+    <div class="tab" onclick="switchTab('date', this)">📅 Dates & ROI</div>
+    <div class="tab" onclick="switchTab('tx', this)">🗑️ Transactions</div>
+    <div class="tab" onclick="switchTab('danger', this)">⚠️ Danger</div>
+  </div>
+
+  <div class="tab-pane active" id="tab-wallet">
+    <div class="form-group"><label>Wallet</label>
+      <select id="walletType">
+        <option value="depositUSD">USD Deposit</option>
+        <option value="depositNGN">NGN Deposit</option>
+        <option value="withdrawalUSD">USD Withdraw</option>
+        <option value="withdrawalNGN">NGN Withdraw</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Amount</label><input type="number" id="walletAmount" placeholder="e.g. 50"></div>
+    <button class="btn btn-green" style="margin-bottom:8px" onclick="adjustWallet(1)">CREDIT (+)</button>
+    <button class="btn btn-red" onclick="adjustWallet(-1)">DEBIT (-)</button>
+  </div>
+
+  <div class="tab-pane" id="tab-date">
+    <div class="form-group"><label>Change Registration Date</label><input type="date" id="newDate"></div>
+    <button class="btn btn-blue" style="margin-bottom:20px" onclick="changeRegDate()">Save Date</button>
+    <hr style="border-color:var(--bd);margin:15px 0">
+    <div class="form-group"><label>Force Credit Daily ROI</label><input type="number" id="roiDays" placeholder="Days to credit (e.g. 1)" value="1"></div>
+    <button class="btn btn-amber" onclick="forceCreditROI()">FORCE CREDIT ROI</button>
+  </div>
+
+  <div class="tab-pane" id="tab-tx">
+    <div id="txContainer"><div class="loader">No transactions loaded.</div></div>
+  </div>
+
+  <div class="tab-pane" id="tab-danger">
+    <button class="btn btn-dark" style="margin-bottom:10px" onclick="resetInvested()">Reset hasInvested Flag</button>
+    <button class="btn btn-amber" style="margin-bottom:10px" onclick="forceReferral()">Force Trigger Referral Bonus</button>
+    <button class="btn btn-red" onclick="deleteUser()">DELETE USER PERMANENTLY</button>
+  </div>
+</section>
