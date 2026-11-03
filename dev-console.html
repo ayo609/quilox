@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quilox Dev Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{--bg:#0b1120;--card:#1e293b;--tx:#f8fafc;--mu:#94a3b8;--bd:#334155;--g:#1eb852;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif;border-radius:0}
+body{background:var(--bg);color:var(--tx);padding-bottom:90px;min-height:100vh}
+
+.top-header{background:#000;padding:20px;border-bottom:2px solid var(--red);display:flex;justify-content:space-between;align-items:center}
+.top-header h1{font-size:16px;font-weight:800;color:var(--red);letter-spacing:1px;text-transform:uppercase}
+.top-header p{font-size:11px;color:var(--mu);font-family:'DM Mono',monospace}
+.logout-btn{background:var(--red);color:#fff;border:none;padding:8px 14px;font-weight:700;font-size:12px;cursor:pointer}
+
+.leaderboard-section{padding:20px;background:var(--card);border-bottom:1px solid var(--bd)}
+.lb-title{font-size:13px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:15px;display:flex;align-items:center;gap:8px}
+.lb-item{background:#0f172a;padding:12px 15px;border:1px solid var(--bd);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.lb-rank{font-size:16px;font-weight:800;color:var(--amber);width:25px;font-family:'DM Mono',monospace}
+.lb-info{flex:1;margin-left:10px}
+.lb-info h4{font-size:14px;font-family:'DM Mono',monospace;font-weight:700}
+.lb-info p{font-size:11px;color:var(--mu);margin-top:3px}
+.lb-stats{text-align:right}
+.lb-count{font-size:14px;font-weight:800;color:var(--g);font-family:'DM Mono',monospace}
+.lb-bonus{font-size:11px;color:var(--mu);margin-top:2px}
+
+.search-section{padding:20px;background:var(--card);border-bottom:1px solid var(--bd)}
+.search-box{display:flex;gap:10px}
+.search-box input{flex:1;padding:14px;background:#0f172a;border:1px solid var(--bd);color:var(--tx);font-family:'DM Mono',monospace;font-size:14px;outline:none}
+.search-box input:focus{border-color:var(--g)}
+.search-btn{background:var(--g);color:#fff;border:none;padding:0 24px;font-weight:800;font-size:14px;cursor:pointer}
+
+.user-view{padding:20px;display:none}
+.user-view.active{display:block}
+.u-card{background:var(--card);padding:20px;border:1px solid var(--bd);border-left:4px solid var(--g);margin-bottom:15px}
+.u-head{display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;border-bottom:1px dashed var(--bd);padding-bottom:15px}
+.u-head h2{font-size:18px;font-family:'DM Mono',monospace;color:var(--tx)}
+.u-head p{font-size:11px;color:var(--mu);margin-top:4px}
+.wallets-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wallet-box{background:#0f172a;padding:12px;border:1px solid var(--bd)}
+.wallet-box h5{font-size:10px;color:var(--mu);text-transform:uppercase;margin-bottom:4px}
+.wallet-box p{font-size:16px;font-family:'DM Mono',monospace;font-weight:800;color:var(--g)}
+
+.action-tabs{display:flex;overflow-x:auto;background:#0f172a;border:1px solid var(--bd);margin-bottom:15px}
+.tab{flex:1;min-width:100px;padding:12px 5px;text-align:center;font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.active{color:var(--g);border-bottom-color:var(--g)}
+.tab-pane{display:none;background:var(--card);padding:20px;border:1px solid var(--bd)}
+.tab-pane.active{display:block}
+
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:11px;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:5px}
+.form-group input,.form-group select{width:100%;padding:12px;background:#0f172a;border:1px solid var(--bd);color:var(--tx);font-family:'DM Mono',monospace;font-size:14px;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:var(--g)}
+.btn{width:100%;padding:12px;border:none;font-weight:800;font-size:13px;cursor:pointer;transition:.2s;text-transform:uppercase}
+.btn-green{background:var(--g);color:#fff}.btn-green:active{background:#159b42}
+.btn-red{background:var(--red);color:#fff}.btn-red:active{background:#dc2626}
+.btn-amber{background:var(--amber);color:#000}.btn-amber:active{background:#d97706}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:active{background:#2563eb}
+.btn-dark{background:#334155;color:#fff}
+
+.tx-item{background:#0f172a;padding:12px;border:1px solid var(--bd);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tx-info h4{font-size:13px;font-weight:700}
+.tx-info p{font-size:11px;color:var(--mu);font-family:'DM Mono',monospace}
+.tx-del{background:var(--red);color:#fff;border:none;padding:6px 10px;font-size:10px;font-weight:800;cursor:pointer}
+
+.swal2-popup{background:var(--card)!important;color:var(--tx)!important;border-radius:0!important;border:1px solid var(--bd)!important;font-family:'Manrope',sans-serif!important}
+.swal2-title{color:var(--tx)!important;font-size:18px!important}
+.swal2-html-container{color:var(--mu)!important;font-size:13px!important}
+.swal2-input{background:#0f172a!important;color:var(--tx)!important;border:1px solid var(--bd)!important;border-radius:0!important;font-family:'DM Mono',monospace!important}
+.swal2-styled{border-radius:0!important;font-weight:700!important;font-size:13px!important}
+.swal2-validation-message{background:#7f1d1d!important;color:#fca5a5!important;border-radius:0!important}
+.swal2-close{color:var(--mu)!important;box-shadow:none!important}
+.loader{text-align:center;padding:30px;color:var(--mu);font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="top-header">
+  <div>
+    <h1>⚠ Dev Console</h1>
+    <p>Quilox God Mode</p>
+  </div>
+  <button class="logout-btn" onclick="devLogout()">Exit</button>
+</header>
+
+<section class="leaderboard-section">
+  <div class="lb-title">🏆 Top 10 Referrers</div>
+  <div id="leaderboardContainer"><div class="loader">Loading leaderboard...</div></div>
+</section>
+
+<section class="search-section">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Enter phone number or referral code..." autocomplete="off">
+    <button class="search-btn" onclick="searchUser()">Search</button>
+  </div>
+</section>
+
+<section class="user-view" id="userView">
+  <div class="u-card">
+    <div class="u-head">
+      <div>
+        <h2 id="uPhone">Loading...</h2>
+        <p id="uInfo">...</p>
+      </div>
+      <div style="text-align:right">
+        <p style="font-size:10px;color:var(--mu)">UID</p>
+        <p style="font-size:10px;font-family:'DM Mono',monospace;color:var(--g)" id="uUid">...</p>
+      </div>
+    </div>
+    <div class="wallets-grid">
+      <div class="wallet-box"><h5>USD Deposit</h5><p id="wUSDd">$0.00</p></div>
+      <div class="wallet-box"><h5>NGN Deposit</h5><p id="wNGNd">₦0.00</p></div>
+      <div class="wallet-box"><h5>USD Withdraw</h5><p id="wUSDw">$0.00</p></div>
+      <div class="wallet-box"><h5>NGN Withdraw</h5><p id="wNGNw">₦0.00</p></div>
+    </div>
+  </div>
+
+  <div class="action-tabs">
+    <div class="tab active" onclick="switchTab('wallet', this)">💰 Wallets</div>
+    <div class="tab" onclick="switchTab('date', this)">📅 Dates & ROI</div>
+    <div class="tab" onclick="switchTab('tx', this)">🗑️ Transactions</div>
+    <div class="tab" onclick="switchTab('danger', this)">⚠️ Danger</div>
+  </div>
+
+  <div class="tab-pane active" id="tab-wallet">
+    <div class="form-group"><label>Wallet</label>
+      <select id="walletType">
+        <option value="depositUSD">USD Deposit</option>
+        <option value="depositNGN">NGN Deposit</option>
+        <option value="withdrawalUSD">USD Withdraw</option>
+        <option value="withdrawalNGN">NGN Withdraw</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Amount</label><input type="number" id="walletAmount" placeholder="e.g. 50"></div>
+    <button class="btn btn-green" style="margin-bottom:8px" onclick="adjustWallet(1)">CREDIT (+)</button>
+    <button class="btn btn-red" onclick="adjustWallet(-1)">DEBIT (-)</button>
+  </div>
+
+  <div class="tab-pane" id="tab-date">
+    <div class="form-group"><label>Change Registration Date</label><input type="date" id="newDate"></div>
+    <button class="btn btn-blue" style="margin-bottom:20px" onclick="changeRegDate()">Save Date</button>
+    <hr style="border-color:var(--bd);margin:15px 0">
+    <div class="form-group"><label>Force Credit Daily ROI</label><input type="number" id="roiDays" placeholder="Days to credit (e.g. 1)" value="1"></div>
+    <button class="btn btn-amber" onclick="forceCreditROI()">FORCE CREDIT ROI</button>
+  </div>
+
+  <div class="tab-pane" id="tab-tx">
+    <div id="txContainer"><div class="loader">No transactions loaded.</div></div>
+  </div>
+
+  <div class="tab-pane" id="tab-danger">
+    <button class="btn btn-dark" style="margin-bottom:10px" onclick="resetInvested()">Reset hasInvested Flag</button>
+    <button class="btn btn-amber" style="margin-bottom:10px" onclick="forceReferral()">Force Trigger Referral Bonus</button>
+    <button class="btn btn-red" onclick="deleteUser()">DELETE USER PERMANENTLY</button>
+  </div>
+</section>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, updateDoc, deleteDoc, increment, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const DEV_PASSWORD = "QuiloxDev@2026";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCuedBfRowmtHYUuzAB4a9RuOmaON5M0VE",
+  authDomain: "quilox-59463.firebaseapp.com",
+  projectId: "quilox-59463",
+  storageBucket: "quilox-59463.firebasestorage.app",
+  messagingSenderId: "602079101577",
+  appId: "1:602079101577:web:f4044eca59b7ed8d38fc58"
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+const fmt = (n, c) => (c === 'USD' ? '$' : '₦') + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+let targetUser = null, targetUid = null, attempts = 0;
+
+// ============================================
+// STEP 1: Verify admin is logged in
+// ============================================
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    // Not logged in → redirect to admin login
+    window.location.href = 'admin-login.html';
+    return;
+  }
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (!snap.exists() || snap.data().role !== 'admin') {
+      // Logged in but not an admin → redirect
+      await signOut(auth);
+      window.location.href = 'admin-login.html';
+      return;
+    }
+    // ✅ Admin verified → show password prompt
+    init();
+  } catch (e) {
+    console.error(e);
+    window.location.href = 'admin-login.html';
+  }
+});
+
+// ============================================
+// STEP 2: Password prompt
+// ============================================
+async function init() {
+  const { value: pass } = await Swal.fire({
+    title: 'Developer Access',
+    html: '<p style="font-size:12px">Enter the developer password to continue</p>',
+    input: 'password',
+    inputPlaceholder: 'Password',
+    showCancelButton: false,
+    confirmButtonText: 'Unlock',
+    confirmButtonColor: '#1eb852',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    preConfirm: v => v
+  });
+  if (pass !== DEV_PASSWORD) {
+    attempts++;
+    if (attempts >= 3) { window.location.href = 'admin.html'; return; }
+    await Swal.fire({ icon: 'error', title: 'Access Denied', text: 'Incorrect password.', confirmButtonColor: '#ef4444' });
+    return init();
+  }
+  Swal.fire({ icon: 'success', title: 'Access Granted', timer: 1000, showConfirmButton: false });
+  loadLeaderboard();
+}
+
+window.devLogout = () => window.location.href = 'admin.html';
+
+// ============================================
+// LEADERBOARD
+// ============================================
+async function loadLeaderboard() {
+  const box = $('leaderboardContainer');
+  try {
+    const usersSnap = await getDocs(collection(db, 'users'));
+    const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const refMap = {};
+    users.forEach(u => {
+      [['referredBy', 0.10], ['referredByL2', 0.03], ['referredByL3', 0.01]].forEach(([key, pct]) => {
+        const uplineId = u[key];
+        if (uplineId && u.firstPlanAmount) {
+          if (!refMap[uplineId]) refMap[uplineId] = { id: uplineId, count: 0, bonusUSD: 0, bonusNGN: 0 };
+          refMap[uplineId].count++;
+          const earned = u.firstPlanAmount * pct;
+          if (u.firstPlanCurrency === 'USD') refMap[uplineId].bonusUSD += earned;
+          else refMap[uplineId].bonusNGN += earned;
+        }
+      });
+    });
+    users.forEach(u => {
+      if (refMap[u.id]) refMap[u.id].phone = u.phone;
+    });
+    const top = Object.values(refMap).filter(r => r.phone).sort((a, b) => b.count - a.count).slice(0, 10);
+    if (!top.length) return box.innerHTML = '<div class="loader">No referrals yet.</div>';
+    box.innerHTML = top.map((r, i) => `
+      <div class="lb-item">
+        <div class="lb-rank">#${i + 1}</div>
+        <div class="lb-info">
+          <h4>${r.phone}</h4>
+          <p>${r.count} Total Referrals</p>
+        </div>
+        <div class="lb-stats">
+          <div class="lb-count">${r.bonusUSD > 0 ? fmt(r.bonusUSD, 'USD') : ''}${r.bonusUSD > 0 && r.bonusNGN > 0 ? ' / ' : ''}${r.bonusNGN > 0 ? fmt(r.bonusNGN, 'NGN') : ''}</div>
+          <div class="lb-bonus">Bonus Claimed</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+    box.innerHTML = `<div class="loader">Could not load leaderboard: ${e.code || e.message}</div>`;
+  }
+}
+
+// ============================================
+// TABS
+// ============================================
+window.switchTab = (id, el) => {
+  document.querySelectorAll('.tab, .tab-pane').forEach(e => e.classList.remove('active'));
+  document.querySelector('.tab-pane#' + 'tab-' + id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => { if (t.innerText.includes(el.innerText.split(' ')[1])) t.classList.add('active'); });
+  el.classList.add('active');
+  if (id === 'tx') loadTransactions();
+};
+
+// ============================================
+// SEARCH USER
+// ============================================
+window.searchUser = async () => {
+  const term = $('searchInput').value.trim();
+  if (!term) return Swal.fire({ icon: 'error', title: 'Enter a phone or referral code' });
+  try {
+    const usersRef = collection(db, 'users');
+    let snap = await getDocs(query(usersRef, where('phone', '==', term)));
+    if (snap.empty) snap = await getDocs(query(usersRef, where('referralCode', '==', term.toUpperCase())));
+    if (snap.empty) return Swal.fire({ icon: 'error', title: 'User not found', text: 'No user with that phone or code exists.' });
+    const doc = snap.docs[0];
+    targetUid = doc.id;
+    targetUser = doc.data();
+    renderUser();
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Search failed', text: `Error: ${e.code || e.message}` });
+  }
+};
+
+function renderUser() {
+  $('userView').classList.add('active');
+  const d = targetUser;
+  $('uPhone').innerText = d.phone;
+  $('uUid').innerText = targetUid.substring(0, 10) + '...';
+  $('uInfo').innerText = `REF: ${d.referralCode} | Status: ${d.status || 'active'} | hasInvested: ${d.hasInvested ? 'YES' : 'NO'}`;
+  $('wUSDd').innerText = fmt(d.depositUSD, 'USD');
+  $('wNGNd').innerText = fmt(d.depositNGN, 'NGN');
+  $('wUSDw').innerText = fmt(d.withdrawalUSD, 'USD');
+  $('wNGNw').innerText = fmt(d.withdrawalNGN, 'NGN');
+}
+
+// ============================================
+// WALLET ACTIONS
+// ============================================
+window.adjustWallet = async (sign) => {
+  const field = $('walletType').value;
+  const amount = parseFloat($('walletAmount').value);
+  if (isNaN(amount) || amount <= 0) return Swal.fire({ icon: 'error', title: 'Enter a valid amount', confirmButtonColor: '#ef4444' });
+  try {
+    const userRef = doc(db, 'users', targetUid);
+    const snap = await getDoc(userRef);
+    const d = snap.data();
+    if (sign < 0 && Number(d[field] || 0) + 1e-9 < amount) {
+      return Swal.fire({ icon: 'error', title: 'Insufficient Balance', text: 'User does not have that much in this wallet.', confirmButtonColor: '#ef4444' });
+    }
+    await updateDoc(userRef, { [field]: increment(sign * amount) });
+    targetUser = (await getDoc(userRef)).data();
+    renderUser();
+    $('walletAmount').value = '';
+    Swal.fire({ icon: 'success', title: `Wallet ${sign > 0 ? 'credited' : 'debited'}`, text: `${fmt(amount, field.includes('USD') ? 'USD' : 'NGN')} ${sign > 0 ? 'added' : 'removed'}.`, timer: 1500, showConfirmButton: false });
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Failed', text: `Error: ${e.code || e.message}`, confirmButtonColor: '#ef4444' });
+  }
+};
+
+window.changeRegDate = async () => {
+  const dateVal = $('newDate').value;
+  if (!dateVal) return Swal.fire({ icon: 'error', title: 'Pick a date', confirmButtonColor: '#ef4444' });
+  try {
+    const userRef = doc(db, 'users', targetUid);
+    await updateDoc(userRef, { createdAt: Timestamp.fromDate(new Date(dateVal)) });
+    targetUser = (await getDoc(userRef)).data();
+    renderUser();
+    Swal.fire({ icon: 'success', title: 'Registration date updated', timer: 1500, showConfirmButton: false });
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Failed', text: `Error: ${e.code || e.message}`, confirmButtonColor: '#ef4444' });
+  }
+};
+
+window.forceCreditROI = async () => {
+  const days = parseInt($('roiDays').value) || 1;
+  try {
+    const invSnap = await getDocs(query(collection(db, 'investments'), where('userId', '==', targetUid), where('status', '==', 'active')));
+    if (invSnap.empty) return Swal.fire({ icon: 'error', title: 'No active investment for this user', confirmButtonColor: '#ef4444' });
+    let totalUSD = 0, totalNGN = 0;
+    for (const inv of invSnap.docs) {
+      const invData = inv.data();
+      const totalROI = invData.dailyROI * days;
+      const field = `withdrawal${invData.currency}`;
+      if (invData.currency === 'USD') totalUSD += totalROI; else totalNGN += totalROI;
+      await updateDoc(doc(db, 'users', targetUid), { [field]: increment(totalROI) });
+      const maxDays = invData.duration || 10;
+      const newDays = Math.min((invData.daysPaid || 0) + days, maxDays);
+      const newStatus = newDays >= maxDays ? 'completed' : 'active';
+      await updateDoc(inv.ref, { daysPaid: newDays, status: newStatus, lastPayout: Timestamp.now() });
+    }
+    targetUser = (await getDoc(doc(db, 'users', targetUid))).data();
+    renderUser();
+    Swal.fire({ icon: 'success', title: 'ROI Credited', text: `+${fmt(totalUSD, 'USD')} and +${fmt(totalNGN, 'NGN')}`, timer: 1800, showConfirmButton: false });
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Failed', text: `Error: ${e.code || e.message}`, confirmButtonColor: '#ef4444' });
+  }
+};
+
+window.resetInvested = async () => {
+  try {
+    await updateDoc(doc(db, 'users', targetUid), { hasInvested: false, firstPlanName: null, firstPlanAmount: null, firstPlanCurrency: null });
+    targetUser = (await getDoc(doc(db, 'users', targetUid))).data();
+    renderUser();
+    Swal.fire({ icon: 'success', title: 'Reset complete', text: 'hasInvested is now FALSE.', timer: 1500, showConfirmButton: false });
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Failed', text: `Error: ${e.code || e.message}`, confirmButtonColor: '#ef4444' });
+  }
+};
+
+window.forceReferral = async () => {
+  if (!targetUser.firstPlanAmount) return Swal.fire({ icon: 'error', title: 'User has no first plan on record', confirmButtonColor: '#ef4444' });
+  try {
+    const levels = [['referredBy', 0.10], ['referredByL2', 0.03], ['referredByL3', 0.01]];
+    const cur = targetUser.firstPlanCurrency, amount = targetUser.firstPlanAmount;
+    let credited = [];
+    for (const [key, pct] of levels) {
+      const uplineId = targetUser[key];
+      if (uplineId) {
+        const bonus = amount * pct;
+        await updateDoc(doc(db, 'users', uplineId), { [`withdrawal${cur}`]: increment(bonus) });
+        credited.push(`${key}: ${fmt(bonus, cur)}`);
+      }
+    }
+    Swal.fire({ icon: 'success', title: 'Referral Bonus Forced', text: credited.join(' | ') || 'No uplines found', timer: 2500, showConfirmButton: false });
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Failed', text: `Error: ${e.code || e.message}`, confirmButtonColor: '#ef4444' });
+  }
+};
+
+window.deleteUser = async () => {
+  const res = await Swal.fire({
+    title: 'DELETE THIS USER?',
+    html: 'This will permanently delete the user <b>AND all their deposits, withdrawals, and investments</b>. This cannot be undone!',
+    icon: 'error',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, Delete',
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#334155',
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      try {
+        for (const c of ['deposits', 'withdrawals', 'investments']) {
+          const snaps = await getDocs(query(collection(db, c), where('userId', '==', targetUid)));
+          for (const d of snaps.docs) await deleteDoc(d.ref);
+        }
+        await deleteDoc(doc(db, 'users', targetUid));
+        return true;
+      } catch (e) {
+        console.error(e);
+        Swal.showValidationMessage(`Failed: ${e.code || e.message}`);
+        return false;
+      }
+    }
+  });
+  if (res.isConfirmed) {
+    Swal.fire({ icon: 'success', title: 'User Deleted', text: 'All data removed.', timer: 1500, showConfirmButton: false });
+    $('userView').classList.remove('active');
+  }
+};
+
+window.loadTransactions = async () => {
+  const box = $('txContainer');
+  box.innerHTML = '<div class="loader">Loading...</div>';
+  try {
+    const [dep, wd, inv] = await Promise.all([
+      getDocs(query(collection(db, 'deposits'), where('userId', '==', targetUid))),
+      getDocs(query(collection(db, 'withdrawals'), where('userId', '==', targetUid))),
+      getDocs(query(collection(db, 'investments'), where('userId', '==', targetUid)))
+    ]);
+    const items = [];
+    dep.forEach(d => items.push({ coll: 'deposits', id: d.id, label: `Deposit ${fmt(d.data().amount, d.data().currency)}`, status: d.data().status, time: d.data().createdAt?.toMillis?.() || 0 }));
+    wd.forEach(d => items.push({ coll: 'withdrawals', id: d.id, label: `Withdrawal ${fmt(d.data().amount, d.data().currency)}`, status: d.data().status, time: d.data().createdAt?.toMillis?.() || 0 }));
+    inv.forEach(d => items.push({ coll: 'investments', id: d.id, label: `Investment ${d.data().planName} ${fmt(d.data().amount, d.data().currency)}`, status: d.data().status, time: d.data().startDate?.toMillis?.() || 0 }));
+    items.sort((a, b) => b.time - a.time);
+    if (!items.length) return box.innerHTML = '<div class="loader">No transactions.</div>';
+    box.innerHTML = items.map(i => `
+      <div class="tx-item">
+        <div class="tx-info"><h4>${i.label}</h4><p>${i.status.toUpperCase()} · ${i.coll}</p></div>
+        <button class="tx-del" onclick="deleteTx('${i.coll}', '${i.id}')">DELETE</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+    box.innerHTML = '<div class="loader">Could not load transactions.</div>';
+  }
+};
+
+window.deleteTx = async (coll, id) => {
+  const res = await Swal.fire({ title: 'Delete this transaction?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Delete', confirmButtonColor: '#ef4444', cancelButtonColor: '#334155' });
+  if (!res.isConfirmed) return;
+  try {
+    await deleteDoc(doc(db, coll, id));
+    await loadTransactions();
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Failed', text: `Error: ${e.code || e.message}`, confirmButtonColor: '#ef4444' });
+  }
+};
+</script>
+</body>
+</html>
